@@ -1,0 +1,307 @@
+@import "tailwindcss";
+
+/* ===================== */
+/* RAW COLOR SCALES      */
+/* ===================== */
+@theme {
+  /* Grays */
+  --gray-50: #f8f9fa;
+  --gray-100: #e9ecef;
+  --gray-200: #dee2e6;
+  --gray-300: #ced4da;
+  --gray-400: #adb5bd;
+  --gray-500: #6c757d;
+  --gray-600: #495057;
+  --gray-700: #343a40;
+  --gray-800: #212529;
+
+  /* Reds */
+  --red-400: #e74040;
+  --red-500: #d23a3a;
+  --red-600: #bd3535;
+  --red-700: #a72f2f;
+  --red-800: #922929;
+  --red-900: #7d2323;
+
+  /* Golds - Tonos más amarillos/dorados, menos naranjas */
+  --gold-400: #ffd700; /* Dorado brillante */
+  --gold-500: #f4c430; /* Dorado saffron */
+  --gold-600: #daa520; /* Goldenrod */
+  --gold-700: #b8860b; /* DarkGoldenrod */
+  --gold-800: #9d7618; /* Dorado oscuro */
+  --gold-900: #85651a; /* Dorado muy oscuro */
+
+  /* Font Family */
+  --font-sans: "Inter", sans-serif;
+
+  /* Fluid Typography */
+  /* Min width: 375px, Max width: 1440px */
+  --fs-display: clamp(4rem, 2.5915rem + 6.0094vw, 8rem);
+  --fs-h1: clamp(2rem, 1.6479rem + 1.5023vw, 3rem);
+  --fs-h2: clamp(1.5rem, 1.3239rem + 0.7512vw, 2rem);
+  --fs-h3: clamp(1.25rem, 1.162rem + 0.3756vw, 1.5rem);
+  --fs-h4: clamp(1.125rem, 1.081rem + 0.1878vw, 1.25rem);
+
+  --fs-body: clamp(1rem, 0.956rem + 0.1878vw, 1.125rem);
+  --fs-sm: clamp(0.875rem, 0.831rem + 0.1878vw, 1rem);
+  --fs-xs: clamp(0.75rem, 0.728rem + 0.0939vw, 0.8125rem);
+}
+
+/* ===================== */
+/* SEMANTIC TOKENS (LIGHT) */
+/* ===================== */
+@theme {
+  --color-bg: var(--gray-50);
+  --color-surface: #ffffff;
+  --color-elevated: var(--gray-100);
+
+  --color-border: var(--gray-200);
+
+  --color-text: var(--gray-800);
+  --color-text-muted: var(--gray-500);
+  --color-text-subtle: var(--gray-400);
+
+  --color-primary: var(--red-900);
+  --color-primary-hover: var(--red-800);
+  --color-primary-soft: color-mix(in srgb, var(--red-900) 8%, white);
+
+  --color-danger: var(--red-600);
+  --color-danger-soft: color-mix(in srgb, var(--red-600) 10%, white);
+
+  --color-hover: var(--gray-100);
+  --color-row-alt: var(--gray-50);
+
+  --color-topbar: var(--red-900);
+  --color-topbar-text: #ffffff;
+  --color-topbar-hover: color-mix(in srgb, var(--red-900) 85%, white);
+
+  --color-overlay: rgba(0, 0, 0, 0.45);
+  --color-modal-border: var(--color-border);
+
+  --color-tournament: var(--gold-600);
+  --color-tournament-hover: var(--gold-700);
+  --color-tournament-soft: color-mix(in srgb, var(--gold-600) 10%, white);
+}
+
+/* ===================== */
+/* SEMANTIC TOKENS (DARK) */
+/* ===================== */
+.dark {
+  --color-bg: var(--gray-800);
+  --color-surface: var(--gray-700);
+  --color-elevated: var(--gray-600);
+
+  --color-border: var(--gray-600);
+
+  --color-text: var(--gray-100);
+  --color-text-muted: var(--gray-400);
+  --color-text-subtle: var(--gray-500);
+
+  --color-primary: var(--red-400);
+  --color-primary-hover: var(--red-500);
+  --color-primary-soft: color-mix(in srgb, var(--red-400) 20%, black);
+
+  --color-danger: var(--red-400);
+  --color-danger-soft: color-mix(in srgb, var(--red-400) 20%, black);
+
+  --color-hover: var(--gray-600);
+  --color-row-alt: color-mix(in srgb, white 3%, black);
+
+  --color-topbar: var(--gray-700);
+  --color-topbar-text: var(--gray-100);
+  --color-topbar-hover: var(--gray-600);
+
+  --color-overlay: rgba(0, 0, 0, 0.65);
+  --color-modal-border: var(--color-border);
+
+  --color-tournament: var(--gold-500);
+  --color-tournament-hover: var(--gold-600);
+  --color-tournament-soft: color-mix(in srgb, var(--gold-500) 20%, black);
+}
+
+/* ===================== */
+/* BASE                  */
+/* ===================== */
+@layer base {
+  body {
+    @apply bg-bg text-text font-sans transition-colors duration-300;
+  }
+}
+
+/* ===================== */
+/* COMPONENT TOKENS      */
+/* ===================== */
+@layer components {
+  .ui-card {
+    @apply bg-surface border border-border rounded-xl shadow-soft;
+  }
+
+  .ui-input {
+    @apply w-full rounded-lg border border-border
+           bg-surface px-3 py-2 text-sm
+           text-text
+           focus:outline-none
+           focus:ring-2 focus:ring-primary/30
+           focus:border-primary;
+  }
+
+  .ui-label {
+    @apply text-sm font-medium text-text;
+  }
+
+  .ui-error {
+    @apply text-xs text-danger mt-1;
+  }
+
+  /* Sidebar */
+  .ui-sidebar {
+    @apply fixed left-0 top-16 bottom-0 z-40
+           w-64 bg-surface border-r border-border
+           transition-transform duration-300 ease-in-out
+           overflow-y-auto;
+  }
+
+  .ui-sidebar-nav {
+    @apply p-4 space-y-1;
+  }
+
+  .ui-sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg
+           text-sm font-medium transition-colors
+           focus:outline-none focus:ring-2 focus:ring-primary/30;
+  }
+
+  .ui-sidebar-item-default {
+    @apply text-text-muted hover:text-text hover:bg-hover;
+  }
+
+  .ui-sidebar-item-active {
+    @apply bg-primary-soft text-primary;
+  }
+
+  .ui-sidebar-parent {
+    @apply w-full justify-between;
+  }
+
+  .ui-sidebar-children {
+    @apply ml-4 mt-1 space-y-1 border-l border-border pl-4;
+  }
+
+  .ui-sidebar-footer {
+    @apply p-4 border-t border-border mt-auto;
+  }
+
+  .ui-sidebar-logout {
+    @apply w-full flex items-center gap-3 px-3 py-2 rounded-lg
+           text-sm font-medium text-danger
+           hover:bg-danger-soft
+           transition-colors
+           focus:outline-none focus:ring-2 focus:ring-danger/30;
+  }
+
+  /* Table */
+  .ui-table {
+    @apply w-full border-collapse;
+  }
+
+  .ui-table-head {
+    @apply bg-primary text-white;
+  }
+
+  .ui-table-head-cell {
+    @apply px-4 py-3 text-left text-sm font-semibold
+           first:rounded-tl-xl last:rounded-tr-xl;
+  }
+
+  .ui-table-row {
+    @apply border-b border-border transition-colors;
+  }
+
+  .ui-table-row-alt {
+    @apply bg-row-alt;
+  }
+
+  .ui-table-row-hover {
+    @apply hover:bg-hover;
+  }
+
+  .ui-table-cell {
+    @apply px-4 py-3 text-sm text-text;
+  }
+
+  .ui-table-empty {
+    @apply px-4 py-8 text-center text-text-muted;
+  }
+}
+
+/* ===================== */
+/* UTILITIES             */
+/* ===================== */
+@utility shadow-soft {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+@layer utilities {
+  .bg-overlay {
+    background-color: var(--color-overlay);
+  }
+
+  /* Typography Utilities */
+  .type-display {
+    font-size: var(--fs-display);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .type-h1 {
+    font-size: var(--fs-h1);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .type-h2 {
+    font-size: var(--fs-h2);
+    line-height: 1.25;
+  }
+
+  .type-h3 {
+    font-size: var(--fs-h3);
+    line-height: 1.3;
+  }
+
+  .type-h4 {
+    font-size: var(--fs-h4);
+    line-height: 1.4;
+  }
+
+  .type-body {
+    font-size: var(--fs-body);
+    line-height: 1.5;
+  }
+
+  .type-sm {
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+  }
+
+  .type-xs {
+    font-size: var(--fs-xs);
+    line-height: 1.5;
+  }
+
+  .tournament-gradient {
+    background: linear-gradient(
+      to bottom right,
+      var(--gold-400),
+      var(--gold-500)
+    );
+  }
+
+  .dark .tournament-gradient {
+    background: linear-gradient(
+      to bottom right,
+      var(--gold-600),
+      var(--gold-800)
+    );
+  }
+}
