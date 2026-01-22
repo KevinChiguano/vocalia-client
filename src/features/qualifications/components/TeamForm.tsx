@@ -7,6 +7,8 @@ import { Team, CreateTeamDto } from "../types/team.types";
 import { Category } from "../types/category.types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Select } from "@/components/ui/Select";
 
 const teamSchema = z.object({
   name: z
@@ -92,7 +94,7 @@ export const TeamForm = ({
         {/* Form */}
         <form
           onSubmit={handleSubmit((data) =>
-            onSubmit(data as unknown as CreateTeamDto)
+            onSubmit(data as unknown as CreateTeamDto),
           )}
           className="p-6 space-y-6"
         >
@@ -115,32 +117,46 @@ export const TeamForm = ({
 
             {/* Basic Info */}
             <div className="flex-1 space-y-4">
-              <Input
-                label="Nombre del Equipo"
-                placeholder="Ej: Los Galácticos FC"
-                error={errors.name?.message}
-                {...register("name")}
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="ui-label">
+                  Nombre del Equipo
+                </Label>
+                <Input
+                  id="name"
+                  placeholder="Ej: Los Galácticos FC"
+                  {...register("name")}
+                />
+                {errors.name?.message && (
+                  <p className="text-xs text-danger font-medium">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
 
-              <Input
-                label="URL del Logo (Opcional)"
-                placeholder="https://ejemplo.com/logo.png"
-                error={errors.logo?.message}
-                {...register("logo")}
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="logo" className="ui-label">
+                  URL del Logo (Opcional)
+                </Label>
+                <Input
+                  id="logo"
+                  placeholder="https://ejemplo.com/logo.png"
+                  {...register("logo")}
+                />
+                {errors.logo?.message && (
+                  <p className="text-xs text-danger font-medium">
+                    {errors.logo.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="categoryId" className="ui-label">
-                Categoría (Obligatorio)
-              </label>
-              <select
+              <Select
+                label="Categoría (Obligatorio)"
                 id="categoryId"
-                className={`w-full px-4 py-2.5 rounded-lg bg-surface border ${
-                  errors.categoryId ? "border-red-500" : "border-border"
-                } focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all text-text appearance-none cursor-pointer`}
+                error={errors.categoryId?.message}
                 {...register("categoryId", { valueAsNumber: true })}
               >
                 <option value={0} disabled>
@@ -151,12 +167,7 @@ export const TeamForm = ({
                     {cat.name}
                   </option>
                 ))}
-              </select>
-              {errors.categoryId && (
-                <p className="text-xs text-red-500">
-                  {errors.categoryId.message}
-                </p>
-              )}
+              </Select>
             </div>
 
             <div className="flex items-center gap-3 pt-6">

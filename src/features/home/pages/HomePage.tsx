@@ -9,14 +9,21 @@ import {
   BarChart3,
 } from "lucide-react";
 import { ModuleCard } from "@/features/home/components/ModuleCard";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const HomePage = () => {
   const modules = [
     {
+      title: "GESTIÓN DE USUARIOS",
+      description: "Administración de usuarios, roles y permisos.",
+      icon: Users,
+      to: "/administration/users",
+    },
+    {
       title: "ADMINISTRACIÓN",
-      description: "Gestión de Ligas, Torneos y Configuración.",
+      description: "Gestión de Torneos y Configuración.",
       icon: Settings,
-      to: "/administration/leagues",
+      to: "/administration/tournaments",
     },
     {
       title: "CALIFICACIONES",
@@ -64,18 +71,12 @@ const HomePage = () => {
 
   return (
     <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="type-h2 font-bold text-text mb-2">
-          Bienvenido al Sistema Integral de Administración Deportiva y
-          Estadísticas de Campeonatos
-        </h1>
-        <p className="type-body text-text-muted">
-          Selecciona un módulo para comenzar a trabajar.
-        </p>
-      </div>
+      <PageHeader
+        title="Bienvenido al Sistema Integral de Administración Deportiva y Estadísticas de Campeonatos"
+        description="Selecciona un módulo para comenzar a trabajar."
+        className="mb-8"
+      />
 
-      {/* Section Title */}
       <h2 className="type-h3 font-semibold text-primary mb-6">
         Módulos Disponibles
       </h2>

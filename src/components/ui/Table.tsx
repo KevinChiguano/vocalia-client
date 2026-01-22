@@ -16,7 +16,7 @@ interface BaseTableProps<T> {
   data: T[];
   loading?: boolean;
   emptyText?: string;
-  renderRow: (item: T) => React.ReactNode[];
+  renderRow: (item: T, index: number) => React.ReactNode[];
   renderMobileRow?: (item: T) => React.ReactNode;
 }
 
@@ -100,10 +100,10 @@ export function BaseTable<T>({
                       !col.sortable
                         ? undefined
                         : sort?.key !== col.key
-                        ? "none"
-                        : sort.direction === "asc"
-                        ? "ascending"
-                        : "descending"
+                          ? "none"
+                          : sort.direction === "asc"
+                            ? "ascending"
+                            : "descending"
                     }
                     onClick={() => {
                       if (!col.sortable) return;
@@ -115,13 +115,13 @@ export function BaseTable<T>({
                               direction:
                                 prev.direction === "asc" ? "desc" : "asc",
                             }
-                          : { key: col.key, direction: "asc" }
+                          : { key: col.key, direction: "asc" },
                       );
                     }}
                     className={clsx(
                       "ui-table-head-cell",
                       col.sortable &&
-                        "cursor-pointer select-none hover:text-white/80"
+                        "cursor-pointer select-none hover:text-white/80",
                     )}
                   >
                     <div className="flex items-center gap-1">
@@ -157,10 +157,10 @@ export function BaseTable<T>({
                   className={clsx(
                     "ui-table-row",
                     index % 2 === 1 && "ui-table-row-alt",
-                    "ui-table-row-hover"
+                    "ui-table-row-hover",
                   )}
                 >
-                  {renderRow(item).map((cell, i) => (
+                  {renderRow(item, index).map((cell, i) => (
                     <td
                       key={i}
                       style={{ width: columns[i]?.width }}
@@ -186,3 +186,102 @@ export function BaseTable<T>({
     </>
   );
 }
+
+export const Table = ({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLTableElement>) => (
+  <div className="w-full overflow-auto">
+    <table
+      className={clsx("w-full caption-bottom text-sm", className)}
+      {...props}
+    >
+      {children}
+    </table>
+  </div>
+);
+Table.displayName = "Table";
+
+export const TableHeader = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <thead className={clsx("[&_tr]:border-b", className)} {...props} />
+);
+TableHeader.displayName = "TableHeader";
+
+export const TableBody = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <tbody className={clsx("[&_tr:last-child]:border-0", className)} {...props} />
+);
+TableBody.displayName = "TableBody";
+
+export const TableFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <tfoot
+    className={clsx(
+      "bg-muted/50 font-medium [&>tr]:last:border-b-0",
+      className,
+    )}
+    {...props}
+  />
+);
+TableFooter.displayName = "TableFooter";
+
+export const TableRow = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLTableRowElement>) => (
+  <tr
+    className={clsx(
+      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      className,
+    )}
+    {...props}
+  />
+);
+TableRow.displayName = "TableRow";
+
+export const TableHead = ({
+  className,
+  ...props
+}: React.ThHTMLAttributes<HTMLTableCellElement>) => (
+  <th
+    className={clsx(
+      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      className,
+    )}
+    {...props}
+  />
+);
+TableHead.displayName = "TableHead";
+
+export const TableCell = ({
+  className,
+  ...props
+}: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+  <td
+    className={clsx(
+      "p-4 align-middle [&:has([role=checkbox])]:pr-0",
+      className,
+    )}
+    {...props}
+  />
+);
+TableCell.displayName = "TableCell";
+
+export const TableCaption = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLTableCaptionElement>) => (
+  <caption
+    className={clsx("mt-4 text-sm text-text-muted", className)}
+    {...props}
+  />
+);
+TableCaption.displayName = "TableCaption";

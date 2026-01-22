@@ -1,3 +1,5 @@
+import { Button } from "./Button";
+
 interface PaginationProps {
   page: number;
   totalPages: number;
@@ -5,37 +7,32 @@ interface PaginationProps {
 }
 
 export const Pagination = ({ page, totalPages, onChange }: PaginationProps) => {
-  // if (totalPages <= 1) return null;
-
   return (
     <div className="flex items-center justify-end gap-2">
-      <button
+      <Button
+        variant="secondary"
+        size="sm"
         disabled={page === 1}
         onClick={() => onChange(page - 1)}
-        className="px-3 py-1 text-sm rounded-md border border-border
-                   bg-surface text-text
-                   hover:bg-elevated
-                   disabled:opacity-50 disabled:cursor-not-allowed
-                   focus:outline-none focus:ring-2 focus:ring-primary/30"
+        className="px-3"
       >
         Anterior
-      </button>
+      </Button>
 
-      <span className="text-sm text-text-muted">
-        Página {page} de {totalPages}
-      </span>
+      <div className="px-4 py-1 bg-surface border border-border rounded-lg text-sm text-text-muted font-medium">
+        Página <span className="text-text">{page}</span> de{" "}
+        <span className="text-text">{totalPages}</span>
+      </div>
 
-      <button
+      <Button
+        variant="secondary"
+        size="sm"
         disabled={page === totalPages}
         onClick={() => onChange(page + 1)}
-        className="px-3 py-1 text-sm rounded-md border border-border
-                   bg-surface text-text
-                   hover:bg-elevated
-                   disabled:opacity-50 disabled:cursor-not-allowed
-                   focus:outline-none focus:ring-2 focus:ring-primary/30"
+        className="px-3"
       >
         Siguiente
-      </button>
+      </Button>
     </div>
   );
 };

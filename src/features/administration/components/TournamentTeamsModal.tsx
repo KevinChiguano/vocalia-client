@@ -45,7 +45,8 @@ export const TournamentTeamsModal = ({
       const response = await teamApi.getTeams({ search: query, limit: 5 });
       // Filter out teams already registered
       const filtered = response.data.filter(
-        (t) => !registeredTeams.some((rt) => Number(rt.teamId) === Number(t.id))
+        (t: Team) =>
+          !registeredTeams.some((rt) => Number(rt.teamId) === Number(t.id)),
       );
       setAvailableTeams(filtered);
     } catch (error) {
@@ -106,13 +107,15 @@ export const TournamentTeamsModal = ({
           </label>
           <div className="relative">
             <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                <Search className="w-4 h-4" />
+              </div>
               <Input
                 placeholder="Buscar equipo por nombre..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
+                className="pl-9"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             </div>
 
             {availableTeams.length > 0 && (
@@ -168,13 +171,11 @@ export const TournamentTeamsModal = ({
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center text-primary font-bold overflow-hidden border border-primary/10">
                     {rt.team?.logo ? (
-                      <>
-                        <img
-                          src={rt.team.logo}
-                          alt={rt.team.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </>
+                      <img
+                        src={rt.team.logo}
+                        alt={rt.team.name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       rt.team?.name.charAt(0)
                     )}
@@ -188,13 +189,17 @@ export const TournamentTeamsModal = ({
                     </p>
                   </div>
                 </div>
-                <button
+                <Button
+                  variant="danger"
+                  size="xs"
+                  isIconOnly
+                  pill
                   onClick={() => handleRemove(rt.id)}
-                  className="p-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                  className="opacity-0 group-hover:opacity-100 h-8 w-8"
                   title="Eliminar del torneo"
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             ))}
 
@@ -210,7 +215,7 @@ export const TournamentTeamsModal = ({
         </div>
 
         <div className="flex justify-end pt-4 border-t border-border">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} className="px-8">
             Cerrar
           </Button>
         </div>

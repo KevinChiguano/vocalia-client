@@ -5,14 +5,14 @@ import {
   CreatePlayerDto,
   UpdatePlayerDto,
 } from "../types/player.types";
-import { PaginatedResponse } from "../types/category.types";
+import { PaginatedResponse } from "@/types/api.types";
 
 import { AxiosRequestConfig } from "axios";
 
 export const playerApi = {
   getPlayers: async (
     params?: PlayerFilters,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<PaginatedResponse<Player>> => {
     const { data } = await api.get("/players", { params, ...config });
     return {
@@ -33,7 +33,7 @@ export const playerApi = {
 
   updatePlayer: async (
     dni: string,
-    player: UpdatePlayerDto
+    player: UpdatePlayerDto,
   ): Promise<Player> => {
     const { data } = await api.put(`/players/${dni}`, player);
     return data.data;
@@ -41,5 +41,10 @@ export const playerApi = {
 
   deletePlayer: async (dni: string): Promise<void> => {
     await api.delete(`/players/${dni}`);
+  },
+
+  bulkCreatePlayers: async (players: CreatePlayerDto[]): Promise<any> => {
+    const { data } = await api.post("/players/bulk", players);
+    return data.data;
   },
 };

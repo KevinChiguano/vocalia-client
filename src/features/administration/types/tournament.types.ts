@@ -1,6 +1,8 @@
+import { PaginatedResponse } from "@/types/api.types";
+
 export interface Tournament {
   id: number;
-  leagueId: number;
+
   name: string;
   startDate?: string | null;
   endDate?: string | null;
@@ -10,7 +12,6 @@ export interface Tournament {
 }
 
 export interface CreateTournamentDTO {
-  leagueId: number;
   name: string;
   startDate?: string | null;
   endDate?: string | null;
@@ -29,15 +30,6 @@ export interface TournamentFilters {
   limit?: number;
   search?: string;
   active?: boolean;
-  leagueId?: number;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
+export type { PaginatedResponse };

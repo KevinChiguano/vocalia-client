@@ -1,4 +1,4 @@
-import { PaginatedResponse } from "@/features/administration/types/league.types";
+import { PaginatedResponse } from "@/types/api.types";
 
 export interface Category {
   id: number;

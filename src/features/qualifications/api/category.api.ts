@@ -3,16 +3,16 @@ import {
   Category,
   CategoryFilters,
   CreateCategoryDto,
-  PaginatedResponse,
   UpdateCategoryDto,
 } from "../types/category.types";
+import { PaginatedResponse } from "@/types/api.types";
 
 import { AxiosRequestConfig } from "axios";
 
 export const categoryApi = {
   getCategories: async (
     params?: CategoryFilters,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<PaginatedResponse<Category>> => {
     const { data } = await api.get("/categories", { params, ...config });
     return {
@@ -33,7 +33,7 @@ export const categoryApi = {
 
   updateCategory: async (
     id: number,
-    category: UpdateCategoryDto
+    category: UpdateCategoryDto,
   ): Promise<Category> => {
     const { data } = await api.put(`/categories/${id}`, category);
     return data.data;

@@ -9,6 +9,7 @@ import { TeamForm } from "../components/TeamForm";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FiltersBar } from "@/components/ui/FiltersBar";
+import { Select } from "@/components/ui/Select";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
@@ -47,7 +48,7 @@ export const TeamsTab = () => {
             category: filters.category,
             active: filters.active,
           },
-          { silent }
+          { silent },
         ),
         categoryApi.getCategories({ limit: 100 }, { silent }), // Get all categories for filter
       ]);
@@ -169,14 +170,11 @@ export const TeamsTab = () => {
               )}
             </div>
 
-            <div className="relative flex items-center min-w-[200px]">
-              <div className="absolute left-3 text-text-muted pointer-events-none">
-                <Filter className="w-4 h-4" />
-              </div>
-              <select
+            <div className="min-w-[200px]">
+              <Select
+                icon={<Filter className="w-4 h-4" />}
                 value={filters.category}
                 onChange={(e) => handleCategoryFilter(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-surface border border-border focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer text-sm"
               >
                 <option value="">Todas las categorías</option>
                 {categories.map((cat) => (
@@ -184,7 +182,7 @@ export const TeamsTab = () => {
                     {cat.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <Button

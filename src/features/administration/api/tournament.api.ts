@@ -4,12 +4,12 @@ import {
   CreateTournamentDTO,
   UpdateTournamentDTO,
   TournamentFilters,
-  PaginatedResponse,
 } from "../types/tournament.types";
+import { PaginatedResponse } from "@/types/api.types";
 
 export const tournamentApi = {
-  getTournamentsByLeague: async (
-    filters: TournamentFilters
+  getTournaments: async (
+    filters: TournamentFilters,
   ): Promise<PaginatedResponse<Tournament>> => {
     const { data } = await api.get("/tournaments", { params: filters });
     // Map backend response { items, pagination } to frontend expectation { data, meta }
@@ -25,7 +25,7 @@ export const tournamentApi = {
   },
 
   createTournament: async (
-    tournament: CreateTournamentDTO
+    tournament: CreateTournamentDTO,
   ): Promise<Tournament> => {
     const { data } = await api.post("/tournaments", tournament);
     return data.data;
@@ -33,7 +33,7 @@ export const tournamentApi = {
 
   updateTournament: async (
     id: number,
-    tournament: UpdateTournamentDTO
+    tournament: UpdateTournamentDTO,
   ): Promise<Tournament> => {
     const { data } = await api.put(`/tournaments/${id}`, tournament);
     return data.data;

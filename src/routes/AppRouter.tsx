@@ -7,10 +7,16 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import HomePage from "@/features/home/pages/HomePage";
 import { NotFoundPage } from "@/features/misc/pages/NotFoundPage";
-import { LeaguesPage } from "@/features/administration/pages/LeaguesPage";
+
 import { TournamentsPage } from "@/features/administration/pages/TournamentsPage";
+import { TournamentTeamsPage } from "@/features/administration/pages/TournamentTeamsPage";
+import { UsersPage } from "@/features/administration/pages/UsersPage";
 import QualificationsPage from "@/features/qualifications/pages/QualificationsPage";
 import CarnetizationPage from "@/features/carnetization/pages/CarnetizationPage";
+import { TechnicalCommissionPage } from "@/features/technical-commission/pages/TechnicalCommissionPage";
+import DigitalVocaliaPage from "@/features/digital-vocalia/pages/DigitalVocaliaPage";
+import MatchControlPage from "@/features/digital-vocalia/pages/MatchControlPage";
+import StatisticsPage from "@/features/statistics/pages/StatisticsPage";
 
 export const router = createBrowserRouter([
   // ================= AUTH =================
@@ -44,18 +50,25 @@ export const router = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <Navigate to="leagues" replace />,
+                element: <Navigate to="tournaments" replace />,
               },
               {
-                path: "leagues",
-                element: <LeaguesPage />,
+                path: "tournaments",
+                children: [
+                  {
+                    index: true,
+                    element: <TournamentsPage />,
+                  },
+                  {
+                    path: ":id/teams",
+                    element: <TournamentTeamsPage />,
+                  },
+                ],
               },
               {
-                path: "leagues/:leagueId/tournaments",
-                element: <TournamentsPage />,
+                path: "users",
+                element: <UsersPage />,
               },
-              // futuras rutas admin:
-              // { path: "tournaments", element: <TournamentsPage /> },
             ],
           },
 
@@ -69,6 +82,32 @@ export const router = createBrowserRouter([
           {
             path: "credentials",
             element: <CarnetizationPage />,
+          },
+
+          {
+            path: "technical-commission",
+            element: <TechnicalCommissionPage />,
+          },
+
+          // ---------- VOCALÍA DIGITAL (ADMIN, VOCAL, USER-readonly) ----------
+          {
+            path: "digital-vocalia",
+            children: [
+              {
+                index: true,
+                element: <DigitalVocaliaPage />,
+              },
+              {
+                path: ":matchId",
+                element: <MatchControlPage />,
+              },
+            ],
+          },
+
+          // ---------- ESTADÍSTICAS (todos) ----------
+          {
+            path: "statistics",
+            element: <StatisticsPage />,
           },
         ],
       },

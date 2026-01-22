@@ -13,10 +13,19 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
-  success: boolean;
-  data: {
-    user: User;
-    token: string;
-  };
-}
+export type LoginResponse =
+  | {
+      success: true;
+      data: {
+        user: User;
+        token: string;
+      };
+      message?: string;
+      error?: string;
+    }
+  | {
+      success: false;
+      data?: never;
+      message?: string;
+      error?: string;
+    };

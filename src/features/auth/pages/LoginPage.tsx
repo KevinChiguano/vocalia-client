@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import logo from "@/assets/logo_san_fernando.png";
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<{
@@ -22,6 +24,12 @@ const LoginPage = () => {
   }>({});
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Si ya está autenticado, redirigir a donde intentaba ir o al home
+  if (isAuthenticated) {
+    const from = location.state?.from?.pathname || "/";
+    return <Navigate to={from} replace />;
+  }
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -91,37 +99,53 @@ const LoginPage = () => {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Email */}
-        <Input
-          id="email"
-          type="email"
-          label="Correo electrónico"
-          placeholder="admin@correo.com"
-          leftIcon={<Mail className="w-4 h-4" />}
-          error={errors.email}
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="email">Correo electrónico</Label>
+          <div className="relative">
+            <div className="absolute left-3 top-2.5 text-muted-foreground pointer-events-none">
+              <Mail className="w-4 h-4" />
+            </div>
+            <Input
+              id="email"
+              type="email"
+              className=""
+              placeholder="admin@correo.com"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
+          {errors.email && (
+            <p className="text-xs text-danger font-medium">{errors.email}</p>
+          )}
+        </div>
 
         {/* Password */}
-        <Input
-          id="password"
-          type={showPassword ? "text" : "password"}
-          label="Contraseña"
-          placeholder="••••••••"
-          leftIcon={<Lock className="w-4 h-4" />}
-          rightIcon={
+        <div className="space-y-2">
+          <Label htmlFor="password">Contraseña</Label>
+          <div className="relative">
+            <div className="absolute left-3 top-2.5 text-muted-foreground pointer-events-none">
+              <Lock className="w-4 h-4" />
+            </div>
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              className="pr-10"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="hover:text-text transition-colors"
+              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
-          }
-          error={errors.password}
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-        />
+          </div>
+          {errors.password && (
+            <p className="text-xs text-danger font-medium">{errors.password}</p>
+          )}
+        </div>
 
         {/* Button */}
         <Button type="submit" loading={loading} className="w-full">
