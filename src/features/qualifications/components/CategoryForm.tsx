@@ -6,6 +6,7 @@ import { X, Save } from "lucide-react";
 import { Category, CreateCategoryDto } from "../types/category.types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 
 const categorySchema = z.object({
   name: z.string().min(1, "El nombre de la categoría es requerido").max(100),
@@ -75,17 +76,26 @@ export const CategoryForm = ({
         {/* Form */}
         <form
           onSubmit={handleSubmit((data) =>
-            onSubmit(data as unknown as CreateCategoryDto)
+            onSubmit(data as unknown as CreateCategoryDto),
           )}
           className="p-6 space-y-5"
         >
-          <Input
-            label="Nombre de la Categoría"
-            placeholder="Ej: Senior, Juvenil, Femenino"
-            error={errors.name?.message}
-            {...register("name")}
-            autoFocus
-          />
+          <div className="space-y-1.5">
+            <Label htmlFor="name" className="ui-label">
+              Nombre de la Categoría
+            </Label>
+            <Input
+              id="name"
+              placeholder="Ej: Senior, Juvenil, Femenino"
+              {...register("name")}
+              autoFocus
+            />
+            {errors.name?.message && (
+              <p className="text-xs text-danger font-medium">
+                {errors.name.message}
+              </p>
+            )}
+          </div>
 
           <div className="space-y-1.5">
             <label className="ui-label">Descripción (Opcional)</label>

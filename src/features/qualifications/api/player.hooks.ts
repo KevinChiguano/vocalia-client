@@ -2,10 +2,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { playerApi } from "../api/player.api";
 import { PlayerFilters, UpdatePlayerDto } from "../types/player.types";
 
-export const usePlayers = (filters?: PlayerFilters) => {
+import { AxiosRequestConfig } from "axios";
+
+export const usePlayers = (
+  filters?: PlayerFilters,
+  config?: AxiosRequestConfig,
+) => {
   return useQuery({
     queryKey: ["players", filters],
-    queryFn: () => playerApi.getPlayers(filters),
+    queryFn: () => playerApi.getPlayers(filters, config),
   });
 };
 

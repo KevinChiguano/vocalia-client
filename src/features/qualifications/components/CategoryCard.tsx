@@ -1,6 +1,8 @@
 import { Edit2, Trash2, Tag } from "lucide-react";
+import clsx from "clsx";
 import { Category } from "../types/category.types";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 interface Props {
   category: Category;
@@ -16,12 +18,11 @@ export const CategoryCard = ({ category, onEdit, onDelete }: Props) => {
       hover:border-primary/40 flex flex-col h-full"
     >
       <div className="p-5 sm:p-6">
-        {/* Header */}
         <div className="flex items-start gap-4 mb-4">
           <div
             className="
               w-11 h-11 sm:w-12 sm:h-12 rounded-xl 
-              bg-gradient-to-br from-primary/20 to-primary/5
+              bg-linear-to-br from-primary/20 to-primary/5
               flex items-center justify-center shrink-0
               group-hover:scale-110 transition-transform duration-300
             "
@@ -34,26 +35,18 @@ export const CategoryCard = ({ category, onEdit, onDelete }: Props) => {
               {category.name}
             </h3>
 
-            <span
-              className={`
-                inline-flex items-center 
-                px-2.5 py-1 rounded-full 
-                text-[10px] sm:text-xs font-bold uppercase tracking-wider
-                ${
-                  category.isActive
-                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
-                    : "bg-slate-500/15 text-slate-700 dark:text-slate-400 border border-slate-500/20"
-                }
-              `}
+            <Badge
+              variant={category.isActive ? "success" : "neutral"}
+              size="sm"
             >
               <span
-                className={`
-                  w-1.5 h-1.5 rounded-full mr-1.5
-                  ${category.isActive ? "bg-emerald-500" : "bg-slate-500"}
-                `}
+                className={clsx(
+                  "w-1.5 h-1.5 rounded-full mr-1.5",
+                  category.isActive ? "bg-success" : "bg-gray-500",
+                )}
               />
               {category.isActive ? "Activo" : "Inactivo"}
-            </span>
+            </Badge>
           </div>
         </div>
         {/* Description */}

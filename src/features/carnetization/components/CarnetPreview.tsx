@@ -5,7 +5,7 @@ import { useUIStore } from "@/store/ui.store";
 
 interface CarnetPreviewProps {
   player: Player;
-  color?: "orange" | "blue" | "red" | "purple";
+  color?: "gold" | "blue" | "red" | "purple";
   leagueName?: string;
   presidentName?: string;
   activeYear?: string;
@@ -17,11 +17,11 @@ interface CarnetPreviewProps {
 }
 
 const colores = {
-  orange: {
-    gradiente: "from-orange-400 via-orange-500 to-orange-600",
-    oscuro: "from-orange-600 to-orange-700",
-    borde: "border-orange-700",
-    texto: "text-orange-600",
+  gold: {
+    gradiente: "from-[#ffd700] via-[#f4c430] to-[#daa520]",
+    oscuro: "from-[#daa520] to-[#b8860b]",
+    borde: "border-[#b8860b]",
+    texto: "text-[#b8860b]",
   },
   blue: {
     gradiente: "from-blue-400 via-blue-500 to-blue-600",
@@ -45,7 +45,7 @@ const colores = {
 
 export const CarnetPreview = ({
   player,
-  color = "orange",
+  color = "gold",
   leagueName = "Liga Deportiva Barrial San Fernando",
   presidentName = "Sr. Marco Martínez",
   activeYear = "2025-2026",

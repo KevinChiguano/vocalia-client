@@ -1,6 +1,7 @@
 import { Edit2, Trash2, Shield, Tag, Users } from "lucide-react";
 import { Team } from "../types/team.types";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
@@ -19,7 +20,7 @@ export const TeamCard = ({ team, onEdit, onDelete }: Props) => {
     >
       {/* Team Logo Section */}
       <div className="relative h-44 flex items-center justify-center bg-elevated/50 p-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
+        <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-50" />
         {team.logo ? (
           <img
             src={team.logo}
@@ -34,15 +35,13 @@ export const TeamCard = ({ team, onEdit, onDelete }: Props) => {
 
         {/* Status Badge */}
         <div className="absolute top-3 right-3">
-          <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm border ${
-              team.isActive
-                ? "bg-green-500/10 text-green-600 border-green-500/20"
-                : "bg-red-500/10 text-red-600 border-red-500/20"
-            }`}
+          <Badge
+            variant={team.isActive ? "success" : "danger"}
+            size="sm"
+            className="shadow-sm"
           >
             {team.isActive ? "Activo" : "Inactivo"}
-          </span>
+          </Badge>
         </div>
       </div>
 

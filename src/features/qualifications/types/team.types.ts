@@ -26,4 +26,5 @@ export interface TeamFilters {
   search?: string;
   active?: boolean;
   category?: string | number;
+  tournamentId?: number;
 }

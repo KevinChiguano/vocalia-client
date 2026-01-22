@@ -1,5 +1,5 @@
 import { api } from "@/api/axios.config";
-import { PaginatedResponse } from "@/features/administration/types/league.types";
+import { PaginatedResponse } from "@/types/api.types";
 import {
   CreateTeamDto,
   Team,
@@ -12,7 +12,7 @@ import { AxiosRequestConfig } from "axios";
 export const teamApi = {
   getTeams: async (
     params?: TeamFilters,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<PaginatedResponse<Team>> => {
     const { data } = await api.get("/teams", { params, ...config });
     return {

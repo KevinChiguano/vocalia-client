@@ -1,6 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { Button } from "./Button";
 
 interface ModalProps {
   isOpen: boolean;
@@ -51,18 +52,22 @@ export const Modal = ({
       <div
         className={cn(
           "w-full ui-card overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200",
-          maxWidthClasses[maxWidth]
+          maxWidthClasses[maxWidth],
         )}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-elevated">
           <h2 className="type-h3 font-bold text-primary">{title}</h2>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            pill
             onClick={onClose}
-            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="text-text-muted hover:text-text h-9 w-9"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}

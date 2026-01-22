@@ -1,8 +1,10 @@
 import { forwardRef } from "react";
 import clsx from "clsx";
 
-interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
+interface InputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "size"
+> {
   label?: string;
   error?: string;
   leftIcon?: React.ReactNode;
@@ -22,7 +24,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       disabled,
       ...props
     },
-    ref
+    ref,
   ) => {
     return (
       <div className="w-full">
@@ -47,7 +49,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 "border-danger focus:ring-danger/40": error,
                 "opacity-60 cursor-not-allowed": disabled,
               },
-              className
+              className,
             )}
             {...props}
           />
@@ -60,7 +62,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {error && <p className="ui-error">{error}</p>}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = "Input";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Plus, Search, X } from "lucide-react";
 import { tournamentApi } from "../api/tournament.api";
 import { Tournament, TournamentFilters } from "../types/tournament.types";
@@ -10,11 +10,10 @@ import { Input } from "@/components/ui/Input";
 import { FiltersBar } from "@/components/ui/FiltersBar";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { TournamentTeamsModal } from "../components/TournamentTeamsModal";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export const TournamentsPage = () => {
-  const { leagueId } = useParams<{ leagueId: string }>();
-  const id = Number(leagueId);
+  const navigate = useNavigate();
 
   // State
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -31,17 +30,13 @@ export const TournamentsPage = () => {
   const [filters, setFilters] = useState<TournamentFilters>({
     search: "",
     active: undefined,
-    leagueId: id, // Siempre filtra por el leagueId de la ruta
   });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(
-    null
+    null,
   );
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [isTeamsModalOpen, setIsTeamsModalOpen] = useState(false);
-  const [selectedTournament, setSelectedTournament] =
-    useState<Tournament | null>(null);
 
   const handleSearch = () => {
     setFilters((prev) => ({
@@ -70,12 +65,11 @@ export const TournamentsPage = () => {
   const fetchTournaments = async () => {
     setLoading(true);
     try {
-      const data = await tournamentApi.getTournamentsByLeague({
+      const data = await tournamentApi.getTournaments({
         page: pagination.page,
         limit: pagination.limit,
         search: filters.search,
         active: filters.active,
-        leagueId: id, // Siempre incluye el leagueId de la ruta
       });
       setTournaments(data.data || []);
       setPagination((prev) => ({ ...prev, ...data.meta }));
@@ -89,7 +83,7 @@ export const TournamentsPage = () => {
 
   useEffect(() => {
     fetchTournaments();
-  }, [pagination.page, pagination.limit, filters.search, filters.active, id]);
+  }, [pagination.page, pagination.limit, filters.search, filters.active]);
 
   // Handlers
   const handleCreate = () => {
@@ -119,8 +113,7 @@ export const TournamentsPage = () => {
   };
 
   const handleManageTeams = (tournament: Tournament) => {
-    setSelectedTournament(tournament);
-    setIsTeamsModalOpen(true);
+    navigate(`/administration/tournaments/${tournament.id}/teams`);
   };
 
   const handleFormClose = () => {
@@ -130,22 +123,19 @@ export const TournamentsPage = () => {
 
   return (
     <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="space-y-1">
-          <h1 className="type-h2 font-bold text-text">Torneos</h1>
-          <p className="type-sm sm:type-body text-text-muted">
-            Gestiona los torneos de esta liga
-          </p>
-        </div>
-        <Button
-          onClick={handleCreate}
-          className="gap-2 shadow-lg hover:shadow-primary/25 w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span>Nuevo Torneo</span>
-        </Button>
-      </div>
+      <PageHeader
+        title="Torneos"
+        description="Gestiona todos los torneos del sistema"
+        actions={
+          <Button
+            onClick={handleCreate}
+            className="gap-2 shadow-lg hover:shadow-primary/25 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>Nuevo Torneo</span>
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <FiltersBar
@@ -160,13 +150,16 @@ export const TournamentsPage = () => {
                 className="w-full sm:w-64 pr-8"
               />
               {searchInput && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  isIconOnly
                   onClick={handleClearSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-hover rounded-md transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
                   aria-label="Limpiar búsqueda"
                 >
-                  <X className="w-4 h-4 text-text-muted" />
-                </button>
+                  <X className="w-4 h-4" />
+                </Button>
               )}
             </div>
 
@@ -242,7 +235,6 @@ export const TournamentsPage = () => {
       <TournamentForm
         isOpen={isFormOpen}
         onClose={handleFormClose}
-        leagueId={id}
         tournamentToEdit={editingTournament}
       />
 
@@ -255,15 +247,6 @@ export const TournamentsPage = () => {
         confirmText="Eliminar"
         danger
       />
-
-      {selectedTournament && (
-        <TournamentTeamsModal
-          isOpen={isTeamsModalOpen}
-          onClose={() => setIsTeamsModalOpen(false)}
-          tournamentId={selectedTournament.id}
-          tournamentName={selectedTournament.name}
-        />
-      )}
     </div>
   );
 };

@@ -16,14 +16,17 @@ import { Player, PlayerFilters, CreatePlayerDto } from "../types/player.types";
 import { Team } from "../types/team.types";
 import { Category } from "../types/category.types";
 import { PlayerForm } from "../components/PlayerForm";
+import { BulkImportPlayerModal } from "./BulkImportPlayerModal";
 import { formatDateForDisplay } from "@/utils/dateUtils";
-import { Tag } from "lucide-react";
+import { Tag, Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FiltersBar } from "@/components/ui/FiltersBar";
 import { Pagination } from "@/components/ui/Pagination";
 import { LimitSelector } from "@/components/ui/LimitSelector";
+import { Select } from "@/components/ui/Select";
 import { BaseTable } from "@/components/ui/Table";
+import { Badge } from "@/components/ui/Badge";
 import { InlineSpinner } from "@/components/ui/InlineSpinner";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -54,6 +57,7 @@ export const PlayersTab = () => {
   });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [deleteDni, setDeleteDni] = useState<string | null>(null);
@@ -86,7 +90,7 @@ export const PlayersTab = () => {
             categoryId: filters.categoryId,
             active: filters.active,
           },
-          { silent }
+          { silent },
         ),
         teamApi.getTeams({ limit: 100 }, { silent }), // For team filter & selection
         categoryApi.getCategories({ limit: 100 }, { silent }), // For category selection
@@ -248,6 +252,15 @@ export const PlayersTab = () => {
           </p>
         </div>
         <Button
+          onClick={() => setIsImportModalOpen(true)}
+          variant="outline"
+          disabled={teams.length === 0}
+          className="gap-2"
+        >
+          <Upload className="w-5 h-5" />
+          <span>Importar (Excel)</span>
+        </Button>
+        <Button
           onClick={handleCreate}
           disabled={teams.length === 0}
           className="gap-2 shadow-lg hover:shadow-primary/20"
@@ -280,14 +293,11 @@ export const PlayersTab = () => {
               )}
             </div>
 
-            <div className="relative flex items-center min-w-[180px]">
-              <div className="absolute left-3 text-text-muted pointer-events-none">
-                <Tag className="w-4 h-4" />
-              </div>
-              <select
+            <div className="min-w-[180px]">
+              <Select
+                icon={<Tag className="w-4 h-4" />}
                 value={filters.categoryId || ""}
                 onChange={(e) => handleCategoryFilter(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-surface border border-border focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer text-sm font-medium"
               >
                 <option value="">Todas las categorías</option>
                 {categories.map((cat) => (
@@ -295,31 +305,28 @@ export const PlayersTab = () => {
                     {cat.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
-            <div className="relative flex items-center min-w-[180px]">
-              <div className="absolute left-3 text-text-muted pointer-events-none">
-                <Filter className="w-4 h-4" />
-              </div>
-              <select
+            <div className="min-w-[180px]">
+              <Select
+                icon={<Filter className="w-4 h-4" />}
                 value={filters.teamId || ""}
                 onChange={(e) => handleTeamFilter(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-surface border border-border focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer text-sm font-medium"
               >
                 <option value="">Todos los equipos</option>
                 {teams
                   .filter((t) =>
                     filters.categoryId
                       ? t.categoryId === filters.categoryId
-                      : true
+                      : true,
                   )
                   .map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.name}
                     </option>
                   ))}
-              </select>
+              </Select>
             </div>
 
             <div className="flex gap-2">
@@ -399,15 +406,9 @@ export const PlayersTab = () => {
               <span className="text-xs font-semibold text-primary uppercase tracking-wider">
                 {player.category?.name || "-"}
               </span>,
-              <div
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  player.isActive
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
+              <Badge variant={player.isActive ? "success" : "danger"} size="sm">
                 {player.isActive ? "Activo" : "Inactivo"}
-              </div>,
+              </Badge>,
               <div className="flex items-center gap-2">
                 <Button
                   variant="secondary"
@@ -432,7 +433,7 @@ export const PlayersTab = () => {
               <div className="space-y-4">
                 {/* Header con foto, nombre y acciones */}
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full border border-border overflow-hidden bg-surface flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full border border-border overflow-hidden bg-surface shrink-0">
                     {player.imageUrl ? (
                       <img
                         src={player.imageUrl}
@@ -450,7 +451,7 @@ export const PlayersTab = () => {
                     </h4>
                     <p className="text-xs text-text-muted">DNI: {player.dni}</p>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Button
                       variant="secondary"
                       size="sm"
@@ -503,13 +504,9 @@ export const PlayersTab = () => {
                     <span className="text-text-muted min-w-[70px]">
                       Estado:
                     </span>
-                    <span
-                      className={`font-medium ${
-                        player.isActive ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
+                    <Badge variant={player.isActive ? "success" : "danger"}>
                       {player.isActive ? "Activo" : "Inactivo"}
-                    </span>
+                    </Badge>
                   </div>
 
                   {player.birthDate && (
@@ -543,7 +540,7 @@ export const PlayersTab = () => {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-24 bg-surface/50 border border-border border-dashed rounded-[2rem]">
+        <div className="flex flex-col items-center justify-center py-24 bg-surface/50 border border-border border-dashed rounded-4xl">
           <div className="w-24 h-24 rounded-full bg-primary-soft flex items-center justify-center mb-6">
             <UserSearch className="w-12 h-12 text-primary opacity-30" />
           </div>
@@ -577,6 +574,16 @@ export const PlayersTab = () => {
         title="Eliminar Jugador"
         description="Esta acción eliminará al jugador de forma permanente. ¿Deseas continuar?"
         danger
+      />
+
+      <BulkImportPlayerModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => fetchData()}
+        teamId={filters.teamId}
+        categoryId={filters.categoryId}
+        teams={teams}
+        categories={categories}
       />
     </div>
   );

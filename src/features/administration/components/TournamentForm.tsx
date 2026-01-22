@@ -14,6 +14,7 @@ import {
 } from "../hooks/useTournaments";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 import { formatDateForInput, isEndDateValid } from "@/utils/dateUtils";
 
 const tournamentSchema = z
@@ -33,14 +34,12 @@ type TournamentFormData = z.infer<typeof tournamentSchema>;
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  leagueId: number;
   tournamentToEdit?: Tournament | null;
 }
 
 export const TournamentForm = ({
   isOpen,
   onClose,
-  leagueId,
   tournamentToEdit,
 }: Props) => {
   const createMutation = useCreateTournament();
@@ -96,7 +95,6 @@ export const TournamentForm = ({
         });
       } else {
         const createData: CreateTournamentDTO = {
-          leagueId,
           name: data.name,
           startDate: data.startDate || null,
           endDate: data.endDate || null,
@@ -117,64 +115,107 @@ export const TournamentForm = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay animate-in fade-in duration-200">
       <div className="w-full max-w-md ui-card overflow-hidden animate-in zoom-in-95 duration-200">
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-elevated">
           <h2 className="type-h3 font-bold text-primary">
             {tournamentToEdit ? "Editar Torneo" : "Nuevo Torneo"}
           </h2>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            pill
             onClick={onClose}
-            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="text-text-muted hover:text-text h-9 w-9"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-          <Input
-            label="Nombre del Torneo"
-            placeholder="Ej: Torneo Apertura 2024"
-            error={errors.name?.message}
-            {...register("name")}
-            autoFocus
-          />
+          <div className="space-y-1.5 w-full">
+            <Label
+              htmlFor="name"
+              className="text-xs font-bold text-text-muted uppercase tracking-wider"
+            >
+              Nombre del Torneo
+            </Label>
+            <Input
+              id="name"
+              placeholder="Ej: Torneo Apertura 2024"
+              {...register("name")}
+              autoFocus
+            />
+            {errors.name?.message && (
+              <p className="text-xs text-danger font-medium">
+                {errors.name.message}
+              </p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              type="date"
-              label="Fecha Inicio"
-              error={errors.startDate?.message}
-              {...register("startDate")}
-            />
-            <Input
-              type="date"
-              label="Fecha Fin"
-              error={errors.endDate?.message}
-              {...register("endDate")}
-            />
+            <div className="space-y-1.5 w-full">
+              <Label
+                htmlFor="startDate"
+                className="text-xs font-bold text-text-muted uppercase tracking-wider"
+              >
+                Fecha Inicio
+              </Label>
+              <Input id="startDate" type="date" {...register("startDate")} />
+              {errors.startDate?.message && (
+                <p className="text-xs text-danger font-medium">
+                  {errors.startDate.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5 w-full">
+              <Label
+                htmlFor="endDate"
+                className="text-xs font-bold text-text-muted uppercase tracking-wider"
+              >
+                Fecha Fin
+              </Label>
+              <Input id="endDate" type="date" {...register("endDate")} />
+              {errors.endDate?.message && (
+                <p className="text-xs text-danger font-medium">
+                  {errors.endDate.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 pt-2">
             <input
               type="checkbox"
               id="isActiveTournament"
-              className="w-4 h-4 text-primary rounded border-border focus:ring-2 focus:ring-primary/30"
+              className="w-5 h-5 text-primary rounded border-border focus:ring-2 focus:ring-primary/30 cursor-pointer"
               {...register("isActive")}
             />
             <label
               htmlFor="isActiveTournament"
-              className="ui-label cursor-pointer"
+              className="ui-label cursor-pointer select-none"
             >
               Torneo Activo
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-6">
-            <Button type="button" variant="secondary" onClick={onClose}>
+          <div className="flex justify-end gap-3 pt-6 border-t border-border mt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+              className="px-6"
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading} className="gap-2">
+            <Button
+              type="submit"
+              loading={isLoading}
+              className="gap-2 min-w-[140px] shadow-lg shadow-primary/20 relative"
+            >
               <Save className="w-4 h-4" />
-              {isLoading ? "Guardando..." : "Guardar"}
+              <span>{tournamentToEdit ? "Guardar Cambios" : "Guardar"}</span>
             </Button>
           </div>
         </form>

@@ -15,6 +15,8 @@ import { Player, CreatePlayerDto } from "../types/player.types";
 import { Team } from "../types/team.types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Select } from "@/components/ui/Select";
 import { Category } from "../types/category.types";
 import { formatDateForInput } from "@/utils/dateUtils";
 
@@ -138,7 +140,7 @@ export const PlayerForm = ({
         {/* Form */}
         <form
           onSubmit={handleSubmit((data) =>
-            onSubmit(data as unknown as CreatePlayerDto)
+            onSubmit(data as unknown as CreatePlayerDto),
           )}
           className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar"
         >
@@ -164,124 +166,180 @@ export const PlayerForm = ({
               </div>
             </div>
 
-            {/* Basic Info */}
-            <div className="md:col-span-2 space-y-4">
+            {/* Basic Info & Identification Wrapper */}
+            <div className="md:col-span-2 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Nombre"
-                  placeholder="Ej: Kevin"
-                  error={errors.name?.message}
-                  {...register("name")}
-                  leftIcon={<User className="w-4 h-4" />}
-                />
-                <Input
-                  label="Apellido"
-                  placeholder="Ej: Chiguano"
-                  error={errors.lastname?.message}
-                  {...register("lastname")}
-                />
+                <div className="space-y-1.5">
+                  <Label htmlFor="name" className="ui-label">
+                    Nombre
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <Input
+                      id="name"
+                      placeholder="Ej: Marco"
+                      className=""
+                      {...register("name")}
+                    />
+                  </div>
+                  {errors.name?.message && (
+                    <p className="text-xs text-danger font-medium">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="lastname" className="ui-label">
+                    Apellido
+                  </Label>
+                  <Input
+                    id="lastname"
+                    placeholder="Ej: Velez"
+                    {...register("lastname")}
+                  />
+                  {errors.lastname?.message && (
+                    <p className="text-xs text-danger font-medium">
+                      {errors.lastname.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="DNI"
-                  placeholder="1723456789"
-                  error={errors.dni?.message}
-                  disabled={!!initialData}
-                  {...register("dni")}
-                  leftIcon={<CreditCard className="w-4 h-4" />}
-                />
-                <Input
-                  label="Número de Camiseta"
-                  type="number"
-                  placeholder="10"
-                  error={errors.number?.message}
-                  {...register("number")}
-                  leftIcon={<Hash className="w-4 h-4" />}
-                />
+                <div className="space-y-1.5">
+                  <Label htmlFor="dni" className="ui-label">
+                    DNI
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                      <CreditCard className="w-4 h-4" />
+                    </div>
+                    <Input
+                      id="dni"
+                      placeholder="1723456789"
+                      className=""
+                      disabled={!!initialData}
+                      {...register("dni")}
+                    />
+                  </div>
+                  {errors.dni?.message && (
+                    <p className="text-xs text-danger font-medium">
+                      {errors.dni.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="number" className="ui-label">
+                    Número de Camiseta
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                      <Hash className="w-4 h-4" />
+                    </div>
+                    <Input
+                      id="number"
+                      type="number"
+                      placeholder="10"
+                      className=""
+                      {...register("number")}
+                    />
+                  </div>
+                  {errors.number?.message && (
+                    <p className="text-xs text-danger font-medium">
+                      {errors.number.message}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label htmlFor="categoryId" className="ui-label">
-                Categoría (Obligatorio)
-              </label>
-              <div className="relative">
-                <select
-                  id="categoryId"
-                  className={`w-full px-4 py-2.5 rounded-lg bg-surface border ${
-                    errors.categoryId ? "border-red-500" : "border-border"
-                  } focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all text-text appearance-none cursor-pointer`}
-                  {...register("categoryId", { valueAsNumber: true })}
-                >
-                  <option value={0} disabled>
-                    Selecciona una categoría
+              <Select
+                label="Categoría (Obligatorio)"
+                id="categoryId"
+                error={errors.categoryId?.message}
+                {...register("categoryId", { valueAsNumber: true })}
+              >
+                <option value={0} disabled>
+                  Selecciona una categoría
+                </option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
                   </option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
-                  <X className="w-4 h-4 rotate-45" />
+                ))}
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Select
+                label="Equipo (Obligatorio)"
+                id="teamId"
+                error={errors.teamId?.message}
+                {...register("teamId", { valueAsNumber: true })}
+              >
+                <option value={0} disabled>
+                  Selecciona un equipo
+                </option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="birthDate" className="ui-label">
+                Fecha de Nacimiento
+              </Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                  <Calendar className="w-4 h-4" />
                 </div>
+                <Input
+                  id="birthDate"
+                  type="date"
+                  className=""
+                  {...register("birthDate")}
+                />
               </div>
-              {errors.categoryId && (
-                <p className="text-xs text-red-500">
-                  {errors.categoryId.message}
+              {errors.birthDate?.message && (
+                <p className="text-xs text-danger font-medium">
+                  {errors.birthDate.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="teamId" className="ui-label">
-                Equipo (Obligatorio)
-              </label>
+              <Label htmlFor="imageUrl" className="ui-label">
+                URL de la Imagen
+              </Label>
               <div className="relative">
-                <select
-                  id="teamId"
-                  className={`w-full px-4 py-2.5 rounded-lg bg-surface border ${
-                    errors.teamId ? "border-red-500" : "border-border"
-                  } focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all text-text appearance-none cursor-pointer`}
-                  {...register("teamId", { valueAsNumber: true })}
-                >
-                  <option value={0} disabled>
-                    Selecciona un equipo
-                  </option>
-                  {teams.map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
-                  <X className="w-4 h-4 rotate-45" />
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                  <ImageIcon className="w-4 h-4" />
                 </div>
+                <Input
+                  id="imageUrl"
+                  placeholder="https://ejemplo.com/jugador.png"
+                  className=""
+                  {...register("imageUrl")}
+                />
               </div>
-              {errors.teamId && (
-                <p className="text-xs text-red-500">{errors.teamId.message}</p>
+              {errors.imageUrl?.message && (
+                <p className="text-xs text-danger font-medium">
+                  {errors.imageUrl.message}
+                </p>
               )}
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Fecha de Nacimiento"
-              type="date"
-              error={errors.birthDate?.message}
-              {...register("birthDate")}
-              leftIcon={<Calendar className="w-4 h-4" />}
-            />
-            <Input
-              label="URL de la Imagen"
-              placeholder="https://ejemplo.com/jugador.png"
-              error={errors.imageUrl?.message}
-              {...register("imageUrl")}
-              leftIcon={<ImageIcon className="w-4 h-4" />}
-            />
           </div>
 
           <div className="flex items-center gap-3 pt-2">
