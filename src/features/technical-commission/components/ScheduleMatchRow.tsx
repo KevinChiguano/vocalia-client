@@ -48,7 +48,7 @@ export const ScheduleMatchRow = ({
   };
 
   return (
-    <tr className="border-b border-border hover:bg-elevated/30 transition-colors group">
+    <tr className="border-b border-border hover:bg-elevated/30 group">
       {/* Time */}
       <td className="p-2">
         <input
@@ -187,7 +187,7 @@ export const ScheduleMatchRow = ({
       <td className="p-2 text-center no-print">
         <button
           onClick={onRemove}
-          className="p-2 text-text-muted hover:text-danger hover:bg-danger/5 rounded-lg transition-all"
+          className="p-2 text-text-muted hover:text-danger hover:bg-danger/5 rounded-lg"
           title="Eliminar Partido"
         >
           <Trash2 className="w-4 h-4" />

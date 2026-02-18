@@ -39,7 +39,7 @@ export const ScheduleVocalsSummary = ({ assignedVocals }: Props) => {
                 assignedVocals.map((v, idx) => (
                   <tr
                     key={idx}
-                    className="border-b border-border last:border-0 hover:bg-hover transition-colors"
+                    className="border-b border-border last:border-0 hover:bg-hover"
                   >
                     <td className="p-3 bg-primary/5">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary mx-auto" />

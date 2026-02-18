@@ -12,9 +12,12 @@ import {
   CardFooter,
 } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { SignaturePad, SignaturePadRef } from "@/components/ui/SignaturePad";
 
 interface MatchSummaryTabProps {
   vocalia: any;
@@ -28,6 +31,10 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
   const [localAmount, setLocalAmount] = useState<string>("");
   const [awayAmount, setAwayAmount] = useState<string>("");
   const [observations, setObservations] = useState<string>("");
+  const [arbitratorName, setArbitratorName] = useState<string>("");
+
+  const localSigRef = useRef<SignaturePadRef>(null);
+  const awaySigRef = useRef<SignaturePadRef>(null);
 
   useEffect(() => {
     if (vocalia) {
@@ -36,10 +43,12 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
         setAwayAmount(vocalia.vocaliaData.awayAmount || "");
       }
       setObservations(vocalia.observations || "");
+      if (vocalia.arbitratorName) setArbitratorName(vocalia.arbitratorName);
     }
   }, [vocalia]);
 
-  const { finalizeMatch, updateVocalia } = useVocaliasMutations(matchId);
+  const { finalizeMatch, updateVocalia, revertMatch } =
+    useVocaliasMutations(matchId);
   const { data: goals } = useMatchGoals(matchId);
   const { data: sanctions } = useMatchSanctions(matchId);
   const { data: matchPlayers } = useMatchPlayers(matchId);
@@ -103,37 +112,27 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
               <label className="text-sm font-medium text-text-subtle">
                 {match.localTeam?.name}
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
-                <input
-                  type="number"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-7"
-                  placeholder="0.00"
-                  value={localAmount}
-                  onChange={(e) => setLocalAmount(e.target.value)}
-                  disabled={isFinalized}
-                />
-              </div>
+              <Input
+                type="number"
+                leftIcon="$"
+                placeholder="0.00"
+                value={localAmount}
+                onChange={(e) => setLocalAmount(e.target.value)}
+                disabled={isFinalized}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-text-subtle">
                 {match.awayTeam?.name}
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
-                <input
-                  type="number"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-7"
-                  placeholder="0.00"
-                  value={awayAmount}
-                  onChange={(e) => setAwayAmount(e.target.value)}
-                  disabled={isFinalized}
-                />
-              </div>
+              <Input
+                type="number"
+                leftIcon="$"
+                placeholder="0.00"
+                value={awayAmount}
+                onChange={(e) => setAwayAmount(e.target.value)}
+                disabled={isFinalized}
+              />
             </div>
           </div>
         </div>
@@ -260,14 +259,47 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
           </div>
         </div>
 
+        {/* ARBITRATOR & SIGNATURES SECTION */}
+        <div className="border border-border rounded-md p-4 bg-row-alt space-y-4">
+          <h4 className="font-bold text-sm text-text-muted uppercase">
+            Firmas y Control
+          </h4>
+
+          <div className="space-y-2">
+            <Input
+              label="Nombre del Árbitro"
+              type="text"
+              placeholder="Nombre del árbitro principal"
+              value={arbitratorName}
+              onChange={(e) => setArbitratorName(e.target.value)}
+              disabled={isFinalized}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            <SignaturePad
+              ref={localSigRef}
+              label={`Firma Capitán ${match.localTeam?.name || "Local"}`}
+              disabled={isFinalized}
+              initialValue={vocalia.signatures?.local}
+            />
+            <SignaturePad
+              ref={awaySigRef}
+              label={`Firma Capitán ${match.awayTeam?.name || "Visitante"}`}
+              disabled={isFinalized}
+              initialValue={vocalia.signatures?.away}
+            />
+          </div>
+        </div>
+
         {/* OBSERVATIONS SECTION */}
         <div className="space-y-2">
           <h4 className="font-bold text-sm text-text-muted uppercase">
             Observaciones
           </h4>
           <div className="flex gap-2">
-            <textarea
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            <Textarea
+              className="flex w-full"
               placeholder="Escribe observaciones del partido aquí..."
               value={observations}
               onChange={(e) => setObservations(e.target.value)}
@@ -335,6 +367,11 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
                     localAmount,
                     awayAmount,
                   },
+                  arbitratorName,
+                  signatures: {
+                    local: localSigRef.current?.getSignature() || undefined,
+                    away: awaySigRef.current?.getSignature() || undefined,
+                  },
                 });
                 setIsConfirmOpen(false);
               }}
@@ -342,6 +379,28 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
               description="Esta acción es irreversible. Se actualizarán las estadísticas y la tabla de posiciones."
             />
           </>
+        )}
+        {isFinalized && (
+          <div className="w-full flex justify-end">
+            <Button
+              variant="outline"
+              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+              onClick={() => {
+                if (
+                  confirm(
+                    "¿Estás seguro de revertir la finalización del partido? Esto restará los puntos y goles de la tabla.",
+                  )
+                ) {
+                  revertMatch.mutate(matchId);
+                }
+              }}
+              disabled={revertMatch?.isPending}
+            >
+              {revertMatch?.isPending
+                ? "Revirtiendo..."
+                : "Revertir Finalización (Corrección)"}
+            </Button>
+          </div>
         )}
       </CardFooter>
     </Card>

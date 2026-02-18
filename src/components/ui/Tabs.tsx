@@ -70,7 +70,7 @@ export const TabsTrigger = ({
   return (
     <button
       className={cn(
-        "relative flex items-center justify-center whitespace-nowrap pb-3 text-sm font-semibold transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+        "relative flex items-center justify-center whitespace-nowrap pb-3 text-sm font-semibold focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
         isActive ? "text-primary" : "text-text-muted hover:text-text",
         className,
       )}

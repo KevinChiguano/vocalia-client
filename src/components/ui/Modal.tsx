@@ -9,6 +9,7 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
+  hideCloseButton?: boolean;
 }
 
 const maxWidthClasses = {
@@ -28,6 +29,7 @@ export const Modal = ({
   title,
   children,
   maxWidth = "md",
+  hideCloseButton,
 }: ModalProps) => {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -36,14 +38,24 @@ export const Modal = ({
 
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleEscape);
+      // Only attach escape listener if close button is not hidden (optional behavior, but often desired for strict modals)
+      // Actually, standard modal behavior usually allows escape unless strict "cannot close" mode.
+      // But hideCloseButton implies we might not want easy closing.
+      // For now, let's keep escape to close unless we want to block that too.
+      // Re-reading user request: "SecurityModal". Often these are forced.
+      // If I hide the close button, I probably don't want escape to work either?
+      // Let's assume just visual hiding for now, OR maybe the user wants to force interaction.
+      // Typically `hideCloseButton` is visual.
+      if (!hideCloseButton) {
+        window.addEventListener("keydown", handleEscape);
+      }
     }
 
     return () => {
       document.body.style.overflow = "auto";
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, hideCloseButton]);
 
   if (!isOpen) return null;
 
@@ -58,16 +70,18 @@ export const Modal = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-elevated">
           <h2 className="type-h3 font-bold text-primary">{title}</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            isIconOnly
-            pill
-            onClick={onClose}
-            className="text-text-muted hover:text-text h-9 w-9"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          {!hideCloseButton && (
+            <Button
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              pill
+              onClick={onClose}
+              className="text-text-muted hover:text-text h-9 w-9"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          )}
         </div>
 
         {/* Content */}

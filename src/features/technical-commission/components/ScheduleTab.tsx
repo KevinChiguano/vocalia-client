@@ -18,6 +18,8 @@ import { useTeams } from "@/features/qualifications/api/team.hooks";
 import { useCategories } from "@/features/qualifications/api/category.hooks";
 import { useUsers } from "@/features/administration/hooks/useUsers";
 
+import { Select } from "@/components/ui/Select";
+
 interface Props {
   editingMatch?: any;
   onCancelEdit?: () => void;
@@ -322,8 +324,7 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-wrap items-end gap-4 bg-surface p-4 rounded-xl shadow-soft border border-border no-print">
         <div className="flex-1 min-w-[200px] w-full">
           <label className="ui-label block mb-1">Seleccionar Torneo</label>
-          <select
-            className="ui-input w-full"
+          <Select
             value={tournamentId}
             onChange={(e) => setTournamentId(parseInt(e.target.value))}
           >
@@ -333,7 +334,7 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
                 {t.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div className="flex-1 min-w-[200px] w-full">

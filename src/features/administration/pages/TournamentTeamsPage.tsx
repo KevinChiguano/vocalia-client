@@ -7,7 +7,6 @@ import {
   Users,
   Trophy,
   LayoutGrid,
-  Tag,
   UserSquare2,
 } from "lucide-react";
 import { tournamentApi } from "../api/tournament.api";
@@ -24,7 +23,9 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Card } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import { useUIStore } from "@/store/ui.store";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 
 const getImageUrl = (path?: string) => {
   if (!path) return "";
@@ -49,6 +50,7 @@ export const TournamentTeamsPage = () => {
   // Search filters
   const [searchName, setSearchName] = useState("");
   const [searchCategory, setSearchCategory] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
     if (tournamentId) {
@@ -91,7 +93,11 @@ export const TournamentTeamsPage = () => {
       // Filter out teams already registered
       const filtered = response.data.filter(
         (t: Team) =>
-          !registeredTeams.some((rt) => Number(rt.teamId) === Number(t.id)),
+          !registeredTeams.some(
+            (rt) =>
+              Number(rt.team?.id || rt.teamId) === Number(t.id) &&
+              Number(rt.category?.id || rt.categoryId) === Number(t.categoryId),
+          ),
       );
       setAvailableTeams(filtered);
     } catch (error) {
@@ -101,10 +107,10 @@ export const TournamentTeamsPage = () => {
     }
   };
 
-  const handleRegister = async (teamId: number) => {
+  const handleRegister = async (teamId: number, categoryId?: number) => {
     showLoader();
     try {
-      await ttApi.registerTeam({ tournamentId, teamId });
+      await ttApi.registerTeam({ tournamentId, teamId, categoryId });
       // Remove from available and refresh registered
       setAvailableTeams((prev) => prev.filter((t) => t.id !== teamId));
       const ttData = await ttApi.getTournamentTeams(tournamentId);
@@ -158,16 +164,73 @@ export const TournamentTeamsPage = () => {
     }
   };
 
-  // Group teams by category
   const groupedTeams = registeredTeams.reduce(
     (acc, rt) => {
-      const catName = rt.team?.category?.name || "Sin Categoría";
+      const catName = rt.category?.name || "Sin Categoría";
       if (!acc[catName]) acc[catName] = [];
       acc[catName].push(rt);
       return acc;
     },
     {} as Record<string, TournamentTeam[]>,
   );
+
+  const renderTeamCard = (rt: TournamentTeam) => {
+    const team = rt.team;
+    if (!team) return null;
+    return (
+      <div
+        key={rt.id}
+        onClick={() => handleSelectTeam(team)}
+        className={`group relative flex flex-col items-center p-6 rounded-3xl border cursor-pointer shadow-sm hover:shadow-xl ${
+          selectedTeam?.id === team.id
+            ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+            : "border-border bg-surface hover:border-primary/40 hover:-translate-y-1"
+        }`}
+      >
+        {/* Large Logo */}
+        <div className="w-24 h-24 rounded-3xl  flex items-center justify-center text-primary font-black overflow-hidden mb-5 group-hover:scale-110 transition-transform duration-500">
+          {team.logo ? (
+            <img
+              src={getImageUrl(team.logo)}
+              alt={team.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Trophy className="w-10 h-10 opacity-30" />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="text-center w-full space-y-1">
+          <p className="font-black text-text leading-tight group-hover:text-primary truncate w-full px-2">
+            {team.name}
+          </p>
+          <p className="text-[10px] text-text-muted font-black uppercase tracking-widest opacity-70">
+            {rt.category?.name || "Sin Categoría"}
+          </p>
+          <div className="pt-2">
+            <p className="text-[9px] text-primary/80 font-black uppercase tracking-tighter bg-primary/10 rounded-full py-1 px-3 inline-block">
+              Click para ver Carnets
+            </p>
+          </div>
+        </div>
+
+        {/* Delete Button */}
+        <Button
+          variant="danger"
+          size="xs"
+          isIconOnly
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRemove(rt.id);
+          }}
+          className="absolute top-3 right-3 rounded-2xl shadow-lg"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    );
+  };
 
   if (!tournament) return null;
 
@@ -202,10 +265,9 @@ export const TournamentTeamsPage = () => {
                 <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">
                   Categoría
                 </label>
-                <select
+                <Select
                   value={searchCategory}
                   onChange={(e) => setSearchCategory(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl bg-surface border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm h-[42px]"
                 >
                   <option value="">Todas las categorías</option>
                   {categories.map((cat) => (
@@ -213,7 +275,7 @@ export const TournamentTeamsPage = () => {
                       {cat.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="md:col-span-5 space-y-1.5">
                 <Label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">
@@ -240,11 +302,11 @@ export const TournamentTeamsPage = () => {
 
             {/* Available Teams Search Results */}
             {availableTeams.length > 0 && (
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2">
                 {availableTeams.map((team) => (
                   <div
                     key={team.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border shadow-sm hover:border-primary/30 transition-all"
+                    className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border shadow-sm hover:border-primary/30"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center text-primary font-bold overflow-hidden border border-primary/10">
@@ -270,7 +332,7 @@ export const TournamentTeamsPage = () => {
                     <Button
                       variant="primary"
                       size="xs"
-                      onClick={() => handleRegister(team.id)}
+                      onClick={() => handleRegister(team.id, team.categoryId)}
                       className="rounded-lg"
                     >
                       <Plus className="w-4 h-4" />
@@ -281,84 +343,79 @@ export const TournamentTeamsPage = () => {
             )}
           </Card>
 
-          {/* Registered Teams List grouped by category */}
+          {/* Registered Teams List with Tabs */}
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-text flex items-center gap-2 ml-1">
-              <LayoutGrid className="w-6 h-6 text-primary" />
-              Equipos Inscritos ({registeredTeams.length})
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
+              <h2 className="text-xl font-black text-text flex items-center gap-2 ml-1">
+                <LayoutGrid className="w-6 h-6 text-primary" />
+                Equipos{" "}
+                <span className="text-primary tracking-tight">Inscritos</span>
+                <span className="text-primary tracking-tight">
+                  ({registeredTeams.length})
+                </span>
+              </h2>
+            </div>
 
-            {Object.entries(groupedTeams).map(([categoryName, teams]) => (
-              <div key={categoryName} className="space-y-3">
-                <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-[10px] ml-1 bg-primary/10 w-fit px-2 py-0.5 rounded-full border border-primary/20">
-                  <Tag className="w-3 h-3" />
-                  {categoryName}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {teams.map((rt) => {
-                    const team = rt.team;
-                    if (!team) return null;
-                    return (
-                      <div
-                        key={rt.id}
-                        onClick={() => handleSelectTeam(team)}
-                        className={`group relative flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer shadow-sm hover:shadow-md ${
-                          selectedTeam?.id === team.id
-                            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                            : "border-border bg-surface hover:border-primary/40"
-                        }`}
+            {registeredTeams.length > 0 ? (
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <div className="overflow-x-auto pb-2 -mx-2 px-2 ui-scrollbar">
+                  <TabsList className="w-full justify-start border-b-border/30 gap-8 min-w-max">
+                    <TabsTrigger
+                      value="all"
+                      className="uppercase tracking-widest text-[11px] font-black"
+                    >
+                      Todos los equipos
+                    </TabsTrigger>
+                    {Object.keys(groupedTeams).map((catName) => (
+                      <TabsTrigger
+                        key={catName}
+                        value={catName}
+                        className="uppercase tracking-widest text-[11px] font-black"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-primary-soft flex items-center justify-center text-primary font-bold overflow-hidden border border-primary/10">
-                            {team.logo ? (
-                              <img
-                                src={getImageUrl(team.logo)}
-                                alt={team.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <Trophy className="w-6 h-6 opacity-30" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-bold text-text leading-tight group-hover:text-primary transition-colors">
-                              {team.name}
-                            </p>
-                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-tighter opacity-70">
-                              {team.category?.name || categoryName}
-                            </p>
-                            <p className="text-[10px] text-primary/70 font-medium mt-0.5">
-                              Click para ver carnets
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="danger"
-                          size="xs"
-                          isIconOnly
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemove(rt.id);
-                          }}
-                          className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    );
-                  })}
+                        {catName}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
                 </div>
-              </div>
-            ))}
 
-            {registeredTeams.length === 0 && (
-              <div className="py-16 text-center border-2 border-dashed border-border rounded-2xl bg-surface/50">
-                <Trophy className="w-16 h-16 text-text-muted/20 mx-auto mb-4" />
-                <p className="text-text-muted font-medium">
-                  No hay equipos inscritos en este torneo
+                <div className="mt-8">
+                  <TabsContent
+                    value="all"
+                    className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500"
+                  >
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {registeredTeams.map((rt) => renderTeamCard(rt))}
+                    </div>
+                  </TabsContent>
+
+                  {Object.entries(groupedTeams).map(([categoryName, teams]) => (
+                    <TabsContent
+                      key={categoryName}
+                      value={categoryName}
+                      className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500"
+                    >
+                      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {teams.map((rt) => renderTeamCard(rt))}
+                      </div>
+                    </TabsContent>
+                  ))}
+                </div>
+              </Tabs>
+            ) : (
+              <div className="py-20 text-center border-2 border-dashed border-border rounded-3xl bg-surface/50 backdrop-blur-sm">
+                <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-primary/10">
+                  <Trophy className="w-10 h-10 text-primary/30" />
+                </div>
+                <p className="text-text font-black uppercase tracking-wider">
+                  No hay equipos inscritos
                 </p>
-                <p className="text-xs text-text-subtle mt-1">
-                  Usa el buscador de arriba para añadir equipos
+                <p className="text-xs text-text-muted mt-2 max-w-[250px] mx-auto">
+                  Utiliza el buscador superior para añadir equipos al torneo
+                  actual
                 </p>
               </div>
             )}
@@ -400,11 +457,11 @@ export const TournamentTeamsPage = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-5">
                     {players.map((player) => (
                       <div
                         key={player.dni}
-                        className="group relative rounded-2xl border border-border bg-surface overflow-hidden shadow-sm hover:shadow-md transition-all hover:border-primary/20"
+                        className="group relative rounded-2xl border border-border bg-surface overflow-hidden shadow-sm hover:shadow-md hover:border-primary/20"
                       >
                         {/* Propiedad card_image_url segun el usuario */}
                         {(player as any).card_image_url || player.cardUrl ? (

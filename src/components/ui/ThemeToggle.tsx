@@ -12,8 +12,7 @@ export const ThemeToggle = ({
 }: ThemeToggleProps) => {
   const { theme, toggleTheme } = useThemeStore();
 
-  const baseIcon =
-    "transition-colors focus:outline-none focus:ring-2 rounded-full";
+  const baseIcon = "focus:outline-none focus:ring-2 rounded-full";
 
   const contextStyles =
     context === "topbar"

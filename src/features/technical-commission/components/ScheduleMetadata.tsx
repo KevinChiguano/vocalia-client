@@ -45,7 +45,7 @@ export const ScheduleMetadata = ({
             <button
               type="button"
               onClick={() => onChangeCategories([])}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${
+              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                 selectedCategoryIds.length === 0
                   ? "bg-primary text-white border-primary shadow-soft scale-105"
                   : "bg-surface text-text-muted border-border hover:border-primary/50"
@@ -59,7 +59,7 @@ export const ScheduleMetadata = ({
                 key={cat.id}
                 type="button"
                 onClick={() => toggleCategory(Number(cat.id))}
-                className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${
+                className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                   selectedCategoryIds.includes(Number(cat.id))
                     ? "bg-tournament text-surface border-tournament shadow-soft scale-105"
                     : "bg-surface text-text-muted border-border hover:border-tournament/50"

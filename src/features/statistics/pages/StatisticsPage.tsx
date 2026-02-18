@@ -7,6 +7,7 @@ import { tournamentApi } from "@/features/administration/api/tournament.api";
 import { GlobalDashboardStats } from "../types/statistics.types";
 import { Tournament } from "@/features/administration/types/tournament.types";
 import { InlineSpinner } from "@/components/ui/InlineSpinner";
+import { Select } from "@/components/ui/Select";
 
 const StatisticsPage = () => {
   const [loading, setLoading] = useState(true);
@@ -66,9 +67,7 @@ const StatisticsPage = () => {
                 Estadísticas por Torneo
               </h2>
               <div className="w-64">
-                {/* Using native select for simplicity and robustness first, styled with tailwind */}
-                <select
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/30"
+                <Select
                   value={selectedTournamentId ?? ""}
                   onChange={handleTournamentChange}
                 >
@@ -77,7 +76,7 @@ const StatisticsPage = () => {
                       {t.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 

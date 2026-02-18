@@ -142,7 +142,7 @@
 /* ===================== */
 @layer base {
   body {
-    @apply bg-bg text-text font-sans transition-colors duration-300;
+    @apply bg-bg text-text font-sans;
   }
 }
 
@@ -185,7 +185,7 @@
 
   .ui-sidebar-item {
     @apply flex items-center gap-3 px-3 py-2 rounded-lg
-           text-sm font-medium transition-colors
+           text-sm font-medium
            focus:outline-none focus:ring-2 focus:ring-primary/30;
   }
 
@@ -213,7 +213,6 @@
     @apply w-full flex items-center gap-3 px-3 py-2 rounded-lg
            text-sm font-medium text-danger
            hover:bg-danger-soft
-           transition-colors
            focus:outline-none focus:ring-2 focus:ring-danger/30;
   }
 
@@ -232,7 +231,7 @@
   }
 
   .ui-table-row {
-    @apply border-b border-border transition-colors;
+    @apply border-b border-border;
   }
 
   .ui-table-row-alt {

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FiltersBar } from "@/components/ui/FiltersBar";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Select } from "@/components/ui/Select";
 
 interface Props {
   onEdit?: (match: any) => void;
@@ -114,8 +115,7 @@ export const ScheduleManagementTab = ({ onEdit }: Props) => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-surface p-4 rounded-xl shadow-soft border border-border">
         <div className="md:col-span-2">
           <label className="ui-label block mb-1">Seleccionar Torneo</label>
-          <select
-            className="ui-input w-full"
+          <Select
             value={tournamentId}
             onChange={(e) => setTournamentId(parseInt(e.target.value))}
           >
@@ -125,7 +125,7 @@ export const ScheduleManagementTab = ({ onEdit }: Props) => {
                 {t.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
@@ -208,10 +208,7 @@ export const ScheduleManagementTab = ({ onEdit }: Props) => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {matches.map((m) => (
-                    <tr
-                      key={m.id}
-                      className="hover:bg-elevated/30 transition-colors"
-                    >
+                    <tr key={m.id} className="hover:bg-elevated/30">
                       <td className="p-4 text-sm font-medium">
                         {formatDate(m.date)}
                       </td>
@@ -275,14 +272,14 @@ export const ScheduleManagementTab = ({ onEdit }: Props) => {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => onEdit?.(m)}
-                            className="p-2 text-text-muted hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                            className="p-2 text-text-muted hover:text-primary hover:bg-primary/5 rounded-lg"
                             title="Editar Match"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setDeleteId(m.id)}
-                            className="p-2 text-text-muted hover:text-danger hover:bg-danger/5 rounded-lg transition-all"
+                            className="p-2 text-text-muted hover:text-danger hover:bg-danger/5 rounded-lg"
                             title="Eliminar Match"
                           >
                             <Trash2 className="w-4 h-4" />

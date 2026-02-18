@@ -78,7 +78,7 @@ export const CarnetPreview = ({
       {/* PNG Download Button - Hidden on Print */}
       <button
         onClick={downloadPNG}
-        className="absolute -top-4 -right-4 z-20 p-2 bg-white rounded-full shadow-lg border border-border transition-all hover:bg-surface hover:scale-110 print:hidden"
+        className="absolute -top-4 -right-4 z-20 p-2 bg-white rounded-full shadow-lg border border-border hover:bg-surface hover:scale-110 print:hidden"
         title="Descargar PNG"
       >
         <Download className="w-5 h-5 text-primary" />

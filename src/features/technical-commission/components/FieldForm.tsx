@@ -74,7 +74,7 @@ export const FieldForm = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <X className="w-5 h-5" />
           </button>

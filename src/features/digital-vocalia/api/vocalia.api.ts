@@ -28,12 +28,18 @@ export const vocaliaApi = {
   },
 
   updateVocalia: async (matchId: number, data: any): Promise<void> => {
-    await api.patch(`/vocalias/match/${matchId}`, data);
+    await api.put(`/vocalias/${matchId}`, data);
   },
 
   finalizeMatch: async (
     matchId: number,
-    scores: { localScore: number; awayScore: number; vocaliaData?: any },
+    scores: {
+      localScore: number;
+      awayScore: number;
+      vocaliaData?: any;
+      arbitratorName?: string;
+      signatures?: { local?: string; away?: string };
+    },
   ): Promise<void> => {
     await api.post(`/vocalias/${matchId}/finalize`, scores);
   },
@@ -46,6 +52,14 @@ export const vocaliaApi = {
     // Actually, looking at matches controller (implied), let's try a standard patch.
     // If 404, I'll need to check backend.
     await api.put(`/matches/${matchId}/status`, { status });
+  },
+
+  verifyAccess: async (matchId: number, password: string): Promise<void> => {
+    await api.post("/vocalias/verify-access", { matchId, password });
+  },
+
+  revertFinalization: async (matchId: number): Promise<void> => {
+    await api.post(`/vocalias/${matchId}/revert`);
   },
 
   // --- MATCH PLAYERS (Planilla) ---

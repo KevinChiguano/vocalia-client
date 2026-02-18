@@ -1,4 +1,5 @@
 import { Team } from "@/features/qualifications/types/team.types";
+import { Category } from "@/features/qualifications/types/category.types";
 
 export interface TournamentTeam {
   id: number;
@@ -15,6 +16,7 @@ export interface TournamentTeam {
   points: number;
   createdAt: string;
   updatedAt?: string;
+  category?: Category;
   team?: Team;
 }
 

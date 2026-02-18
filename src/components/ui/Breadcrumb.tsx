@@ -71,7 +71,7 @@ export const Breadcrumb = ({ className }: BreadcrumbProps) => {
       aria-label="Breadcrumb"
       className={cn(
         "flex items-center text-sm text-text-secondary/70 mb-4",
-        className
+        className,
       )}
     >
       <ol className="flex flex-wrap items-center gap-2">
@@ -79,7 +79,7 @@ export const Breadcrumb = ({ className }: BreadcrumbProps) => {
         <li>
           <Link
             to="/"
-            className="flex items-center hover:text-primary transition-colors"
+            className="flex items-center hover:text-primary"
             title="Inicio"
           >
             <Home className="w-4 h-4" />
@@ -106,10 +106,7 @@ export const Breadcrumb = ({ className }: BreadcrumbProps) => {
                 </span>
               ) : (
                 <>
-                  <Link
-                    to={path}
-                    className="hover:text-primary transition-colors"
-                  >
+                  <Link to={path} className="hover:text-primary">
                     {formatSegment(segment)}
                   </Link>
                   <ChevronRight className="w-4 h-4 text-gray-400" />

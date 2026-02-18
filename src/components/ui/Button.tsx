@@ -35,7 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={clsx(
-          "inline-flex items-center justify-center gap-2 font-medium transition-all active:scale-[0.98]",
+          "inline-flex items-center justify-center gap-2 font-medium active:scale-[0.98]",
           "focus:outline-none focus:ring-2",
 
           pill ? "rounded-full" : "rounded-lg",

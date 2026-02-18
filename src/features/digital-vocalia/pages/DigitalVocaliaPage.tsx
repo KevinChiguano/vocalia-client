@@ -60,6 +60,11 @@ const DigitalVocaliaPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {vocalia.vocalUser && (
+                    <div className="text-xs font-medium px-2 py-1 bg-secondary/10 text-secondary-foreground rounded w-fit">
+                      Vocal: {vocalia.vocalUser.name}
+                    </div>
+                  )}
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
@@ -88,9 +93,7 @@ const DigitalVocaliaPage = () => {
 
                   <Button
                     className="w-full"
-                    onClick={() =>
-                      navigate(`/digital-vocalia/${match.match_id}`)
-                    }
+                    onClick={() => navigate(`/digital-vocalia/${match.id}`)}
                   >
                     Gestionar Partido
                   </Button>

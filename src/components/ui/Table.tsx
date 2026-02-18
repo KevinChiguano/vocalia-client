@@ -239,7 +239,7 @@ export const TableRow = ({
 }: React.HTMLAttributes<HTMLTableRowElement>) => (
   <tr
     className={clsx(
-      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      "border-b hover:bg-muted/50 data-[state=selected]:bg-muted",
       className,
     )}
     {...props}

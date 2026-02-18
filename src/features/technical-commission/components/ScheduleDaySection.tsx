@@ -87,7 +87,7 @@ export const ScheduleDaySection = ({
 
         <button
           onClick={onRemoveDay}
-          className="text-[10px] font-black text-danger hover:text-danger/80 transition-colors uppercase tracking-widest no-print"
+          className="text-[10px] font-black text-danger hover:text-danger/80 uppercase tracking-widest no-print"
         >
           Eliminar Día
         </button>
@@ -140,7 +140,7 @@ export const ScheduleDaySection = ({
       <div className="p-3 flex justify-center border-t border-border no-print">
         <button
           onClick={addMatch}
-          className="flex items-center gap-2 px-6 py-2 bg-primary/5 text-primary rounded-full border border-primary/20 font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm"
+          className="flex items-center gap-2 px-6 py-2 bg-primary/5 text-primary rounded-full border border-primary/20 font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white shadow-sm"
         >
           <Plus className="w-4 h-4" />
           Añadir Partido

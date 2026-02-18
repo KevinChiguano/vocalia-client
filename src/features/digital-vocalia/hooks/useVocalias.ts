@@ -68,19 +68,6 @@ export const useMatchVocalia = (matchId: number) => {
   return useQuery({
     queryKey: ["vocalia", matchId, isAdmin],
     queryFn: async () => {
-      if (isAdmin) {
-        const match = await scheduleApi.getMatchById(matchId);
-        return {
-          id: 0,
-          matchId: match.id,
-          vocalUserId: 0,
-          localCaptainId: undefined,
-          awayCaptainId: undefined,
-          local_captain_id: undefined,
-          away_captain_id: undefined, // Add missing props
-          match: match,
-        } as Vocalia;
-      }
       return vocaliaApi.getVocaliaByMatch(matchId);
     },
     enabled: !!matchId,
@@ -207,11 +194,15 @@ export const useVocaliasMutations = (matchId?: number) => {
       localScore: number;
       awayScore: number;
       vocaliaData?: any;
+      arbitratorName?: string;
+      signatures?: { local?: string; away?: string };
     }) =>
       vocaliaApi.finalizeMatch(variables.matchId, {
         localScore: variables.localScore,
         awayScore: variables.awayScore,
         vocaliaData: variables.vocaliaData,
+        arbitratorName: variables.arbitratorName,
+        signatures: variables.signatures,
       }),
     onSuccess: () => {
       toast.success("Partido finalizado");
@@ -251,6 +242,15 @@ export const useVocaliasMutations = (matchId?: number) => {
           queryClient.invalidateQueries({ queryKey: ["vocalia", matchId] });
       },
       onError: () => toast.error("Error al actualizar vocalía"),
+    }),
+    revertMatch: useMutation({
+      mutationFn: (matchId: number) => vocaliaApi.revertFinalization(matchId),
+      onSuccess: () => {
+        toast.success("Partido revertido a estado en curso");
+        if (matchId)
+          queryClient.invalidateQueries({ queryKey: ["vocalia", matchId] });
+      },
+      onError: () => toast.error("Error al revertir partido"),
     }),
   };
 };

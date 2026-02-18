@@ -66,8 +66,7 @@ export const Topbar = () => {
             aria-label="Cerrar sesión"
             className="p-2 rounded-full
             text-topbar-text
-            hover:bg-topbar-hover
-            transition-colors"
+            hover:bg-topbar-hover"
           >
             <LogOut className="w-4 h-4" />
           </button>

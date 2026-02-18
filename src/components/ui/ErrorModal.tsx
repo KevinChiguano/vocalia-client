@@ -23,7 +23,7 @@ export const ErrorModal = () => {
           </div>
           <button
             onClick={clearError}
-            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full transition-colors focus:outline-none"
+            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full focus:outline-none"
           >
             <X className="w-5 h-5" />
           </button>
@@ -44,6 +44,6 @@ export const ErrorModal = () => {
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };

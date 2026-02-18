@@ -69,6 +69,11 @@ export interface Vocalia {
   away_captain_id?: number;
   observations?: string;
   vocaliaData?: any;
+  arbitratorName?: string;
+  signatures?: {
+    local?: string;
+    away?: string;
+  };
   match?: any; // We might need a proper Match type here
 }
 

@@ -18,8 +18,7 @@ export const AppLayout = () => {
 
         <main
           className={`
-              flex-1 p-4 md:p-6 mt-16
-              transition-all duration-300`}
+              flex-1 p-4 md:p-6 mt-16`}
         >
           <div className="flex items-center gap-4 mb-4">
             <Button

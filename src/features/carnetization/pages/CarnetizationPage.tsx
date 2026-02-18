@@ -265,7 +265,7 @@ const CarnetizationPage = () => {
                   <button
                     key={color.id}
                     onClick={() => setCarnetColor(color.id as any)}
-                    className={`w-10 h-10 rounded-full border-4 hover:scale-110 transition-all ${
+                    className={`w-10 h-10 rounded-full border-4 hover:scale-110 ${
                       color.class
                     } ${
                       carnetColor === color.id

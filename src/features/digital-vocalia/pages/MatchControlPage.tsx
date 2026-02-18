@@ -7,11 +7,15 @@ import { MatchHeader } from "../components/MatchHeader";
 import { MatchPlayersTab } from "../components/MatchPlayersTab";
 import { MatchEventsTab } from "../components/MatchEventsTab";
 import { MatchSummaryTab } from "../components/MatchSummaryTab";
+import { SecurityModal } from "../components/SecurityModal";
+import { useState } from "react";
 
 const MatchControlPage = () => {
   const { matchId } = useParams();
   const { updateStatus } = useVocaliasMutations(Number(matchId));
   const { data: vocalia, isLoading } = useMatchVocalia(Number(matchId));
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [showSecurityModal, setShowSecurityModal] = useState(true);
 
   useEffect(() => {
     if (vocalia?.match?.status === "programado") {
@@ -23,6 +27,20 @@ const MatchControlPage = () => {
   if (!vocalia || !vocalia.match) return <div>Partido no encontrado</div>;
 
   const match = vocalia.match;
+
+  if (!isAuthorized) {
+    return (
+      <SecurityModal
+        open={showSecurityModal}
+        matchId={Number(matchId)}
+        onSuccess={() => {
+          setIsAuthorized(true);
+          setShowSecurityModal(false);
+        }}
+        onCancel={() => window.history.back()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

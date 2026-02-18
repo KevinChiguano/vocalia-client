@@ -14,12 +14,17 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/Dialog";
-import { Select } from "@/components/ui/Select";
 import { Label } from "@/components/ui/Label";
-import { Badge } from "@/components/ui/Badge";
-import { Loader2 } from "lucide-react";
+import { Select } from "@/components/ui/Select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/Table";
 
 interface MatchEventsTabProps {
   match: any;
@@ -154,32 +159,32 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
         <CardContent className="p-0 flex-1 flex flex-col">
           {/* PLAYERS LIST */}
           <div className="flex-1 overflow-auto">
-            <table className="w-full text-sm ui-table">
-              <thead className="bg-elevated text-text-muted font-semibold border-b border-border sticky top-0 z-10">
-                <tr>
-                  <th className="py-2 px-2 text-center w-10">#</th>
-                  <th className="py-2 px-2 text-left">JUGADOR</th>
-                  <th className="py-2 px-2 text-center w-36">GOLES</th>
-                  <th className="py-2 px-2 text-center w-32">TARJETAS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {players?.map((mp: any) => {
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10 text-center">#</TableHead>
+                  <TableHead>JUGADOR</TableHead>
+                  <TableHead className="w-36 text-center">GOLES</TableHead>
+                  <TableHead className="w-32 text-center">TARJETAS</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {players?.map((mp: any, idx: number) => {
                   const p = mp.player;
                   const playerGoals = getPlayerGoals(Number(p.id)) || [];
                   const goalCount = playerGoals.length;
                   const playerSanctions = getPlayerSanctions(Number(p.id));
 
                   return (
-                    <tr key={p.id} className="hover:bg-hover transition-colors">
-                      <td className="py-3 px-2 text-center text-text-subtle font-mono">
+                    <TableRow key={`${p.id}-${idx}`} className="hover:bg-hover">
+                      <TableCell className="text-center font-mono">
                         {p.number || "-"}
-                      </td>
-                      <td className="py-3 px-2 font-medium text-text">
+                      </TableCell>
+                      <TableCell className="font-medium">
                         {p.name}
                         {p.lastname ? ` ${p.lastname}` : ""}
-                      </td>
-                      <td className="py-3 px-2">
+                      </TableCell>
+                      <TableCell>
                         {/* GOAL COUNTER */}
                         <div className="flex items-center justify-center gap-2">
                           <Button
@@ -210,18 +215,18 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
                             +
                           </Button>
                         </div>
-                      </td>
-                      <td className="py-3 px-2">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center justify-center gap-3">
                           {/* YELLOW CARD */}
                           <div className="flex items-center gap-1">
                             <div className="flex -space-x-2">
                               {playerSanctions
                                 ?.filter((s: any) => s.type === "amarilla")
-                                .map((s: any) => (
+                                .map((s: any, sIdx: number) => (
                                   <div
-                                    key={s.id}
-                                    className="w-5 h-7 bg-yellow-400 border border-yellow-500 rounded-[2px] shadow-sm cursor-pointer hover:z-10 transition-all hover:scale-110"
+                                    key={`${s.id}-${sIdx}`}
+                                    className="w-5 h-7 bg-yellow-400 border border-yellow-500 rounded-[2px] shadow-sm cursor-pointer hover:z-10 hover:scale-110"
                                     title="Eliminar tarjeta amarilla"
                                     onClick={() => {
                                       if (
@@ -298,22 +303,22 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
                             </Button>
                           </div>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
                 {(!players || players.length === 0) && (
-                  <tr>
-                    <td
+                  <TableRow>
+                    <TableCell
                       colSpan={4}
-                      className="py-12 text-center text-text-muted text-sm"
+                      className="py-12 text-center text-text-muted"
                     >
                       No hay jugadores registrados en planilla.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {/* SUBSTITUTIONS SECTION */}
@@ -332,7 +337,7 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
               </Button>
             </div>
             <div className="space-y-1">
-              {teamSubstitutions?.map((sub: any) => {
+              {teamSubstitutions?.map((sub: any, subIdx: number) => {
                 const pOut = players.find(
                   (p: any) =>
                     Number(p.player?.id) === Number(sub.playerOut?.id),
@@ -342,7 +347,7 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
                 );
                 return (
                   <div
-                    key={sub.id}
+                    key={`${sub.id}-${subIdx}`}
                     className="flex items-center justify-between text-xs bg-surface border border-border rounded px-2 py-1"
                   >
                     <div className="flex items-center gap-2">
@@ -408,8 +413,11 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
               >
                 <option value="">Seleccionar Jugador</option>
                 {(subTeamId === localTeamId ? localPlayers : awayPlayers)?.map(
-                  (p: any) => (
-                    <option key={p.player?.id} value={String(p.player?.id)}>
+                  (p: any, pIdx: number) => (
+                    <option
+                      key={`${p.player?.id}-${pIdx}`}
+                      value={String(p.player?.id)}
+                    >
                       {p.player?.number ? `#${p.player?.number} ` : ""}
                       {p.player?.name}
                     </option>
@@ -425,8 +433,11 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
               >
                 <option value="">Seleccionar Jugador</option>
                 {(subTeamId === localTeamId ? localPlayers : awayPlayers)?.map(
-                  (p: any) => (
-                    <option key={p.player?.id} value={String(p.player?.id)}>
+                  (p: any, pIdx: number) => (
+                    <option
+                      key={`${p.player?.id}-${pIdx}-in`}
+                      value={String(p.player?.id)}
+                    >
                       {p.player?.number ? `#${p.player?.number} ` : ""}
                       {p.player?.name}
                     </option>

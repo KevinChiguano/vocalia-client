@@ -67,7 +67,7 @@ export const CategoryForm = ({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <X className="w-5 h-5" />
           </button>
@@ -102,7 +102,7 @@ export const CategoryForm = ({
             <textarea
               className={`w-full min-h-[100px] px-4 py-3 rounded-lg bg-surface border ${
                 errors.description ? "border-red-500" : "border-border"
-              } focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all text-text resize-none`}
+              } focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-text resize-none`}
               placeholder="Descripción breve de la categoría..."
               {...register("description")}
             />

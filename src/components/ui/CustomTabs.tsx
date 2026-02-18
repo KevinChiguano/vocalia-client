@@ -29,8 +29,8 @@ export function CustomTabs<T extends string>({
             key={tab.key}
             onClick={() => onChange(tab.key)}
             className={cn(
-              "relative flex items-center gap-2 pb-3 text-sm font-semibold transition-colors",
-              active ? "text-primary" : "text-text-muted hover:text-text"
+              "relative flex items-center gap-2 pb-3 text-sm font-semibold",
+              active ? "text-primary" : "text-text-muted hover:text-text",
             )}
           >
             {tab.icon}

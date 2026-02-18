@@ -47,13 +47,13 @@ export const TournamentCard = ({
                 "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold",
                 tournament.isActive
                   ? "bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400 dark:border-green-800"
-                  : "bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 dark:border-red-800"
+                  : "bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 dark:border-red-800",
               )}
             >
               <span
                 className={cn(
                   "w-1.5 h-1.5 rounded-full mr-1.5",
-                  tournament.isActive ? "bg-green-500" : "bg-red-500"
+                  tournament.isActive ? "bg-green-500" : "bg-red-500",
                 )}
               />
               {tournament.isActive ? "Activo" : "Inactivo"}
@@ -89,7 +89,7 @@ export const TournamentCard = ({
             <span>Editar</span>
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => onManageTeams(tournament)}
             className="flex-1 gap-1.5 sm:gap-2 text-xs sm:text-sm rounded-xl border border-primary text-primary hover:bg-primary/5"
