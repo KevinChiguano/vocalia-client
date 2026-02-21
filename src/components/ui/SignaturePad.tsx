@@ -7,6 +7,8 @@ interface SignaturePadProps {
   onChange?: (signature: string | null) => void;
   disabled?: boolean;
   initialValue?: string;
+  height?: number;
+  className?: string;
 }
 
 export interface SignaturePadRef {
@@ -16,7 +18,7 @@ export interface SignaturePadRef {
 }
 
 export const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
-  ({ label, onChange, disabled, initialValue }, ref) => {
+  ({ label, onChange, disabled, initialValue, height, className }, ref) => {
     const sigPad = useRef<SignatureCanvas>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -66,16 +68,17 @@ export const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
       setTimeout(resizeCanvas, 100);
 
       return () => window.removeEventListener("resize", resizeCanvas);
-    }, [initialValue]);
+    }, [initialValue, height]);
 
     return (
-      <div className="space-y-2">
+      <div className={`space-y-2 ${className || ""}`}>
         <label className="text-sm font-medium text-text-subtle">{label}</label>
         <div
           ref={containerRef}
-          className={`border rounded-md bg-white overflow-hidden relative h-40 ${
-            disabled ? "opacity-60 pointer-events-none" : "border-border"
-          }`}
+          style={{ height: height ? `${height}px` : undefined }}
+          className={`border rounded-md bg-white overflow-hidden relative ${
+            height ? "" : "h-40"
+          } ${disabled ? "opacity-60 pointer-events-none" : "border-border"}`}
         >
           {disabled && initialValue ? (
             <img
@@ -91,6 +94,7 @@ export const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(
                 className: "signature-canvas w-full h-full",
               }}
               onEnd={handleEnd}
+              onBegin={() => {}}
             />
           )}
 

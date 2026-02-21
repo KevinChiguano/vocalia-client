@@ -8,7 +8,7 @@ import { TournamentForm } from "../components/TournamentForm";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FiltersBar } from "@/components/ui/FiltersBar";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PageHeader } from "@/components/ui/PageHeader";
 
@@ -171,16 +171,7 @@ export const TournamentsPage = () => {
         }
       />
 
-      {/* Results count */}
-      {!loading && (
-        <div className="flex items-center justify-between text-sm text-text-muted px-1">
-          <span>
-            Mostrando {tournaments.length} de {pagination.total} torneo
-            {pagination.total !== 1 ? "s" : ""}
-          </span>
-        </div>
-      )}
-
+      {/* Results count removed from top, handled by PaginationFooter directly */}
       {/* Content */}
       {Array.isArray(tournaments) && tournaments.length > 0 ? (
         <>
@@ -197,17 +188,15 @@ export const TournamentsPage = () => {
           </div>
 
           {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="flex justify-center pt-4 sm:pt-6">
-              <Pagination
-                page={pagination.page}
-                totalPages={pagination.totalPages}
-                onChange={(page) =>
-                  setPagination((prev) => ({ ...prev, page }))
-                }
-              />
-            </div>
-          )}
+          <PaginationFooter
+            currentCount={tournaments.length}
+            totalCount={pagination.total}
+            itemName={pagination.total !== 1 ? "torneos" : "torneo"}
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            onChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+            className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-6 border-t border-border/50"
+          />
         </>
       ) : (
         !loading && (

@@ -1,6 +1,6 @@
 import { BaseTable } from "@/components/ui/Table";
 import { PlayerStats } from "../types/statistics.types";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { PaginatedResponse } from "@/types/api.types";
 import { Badge } from "@/components/ui/Badge";
 
@@ -73,10 +73,14 @@ export const PlayersStatsTable = ({ data, meta, onPageChange }: Props) => {
       />
 
       {meta && (
-        <Pagination
+        <PaginationFooter
+          currentCount={data.length}
+          totalCount={meta.total}
+          itemName="registros"
           page={meta.page}
           totalPages={meta.totalPages}
           onChange={onPageChange}
+          className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-6 border-t border-border/50"
         />
       )}
     </div>

@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 
 interface PageHeaderProps {
   title: string | ReactNode;
-  description?: string;
+  description?: string | ReactNode;
   actions?: ReactNode;
   className?: string;
   hideOnPrint?: boolean;

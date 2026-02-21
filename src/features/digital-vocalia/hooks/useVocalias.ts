@@ -2,10 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { vocaliaApi } from "../api/vocalia.api";
 import { VocaliaFilters, Vocalia } from "../types/vocalia.types";
 
-// Simple toast mock
+import { useUIStore } from "@/store/ui.store";
+
+// Simple toast mock using global store
 const toast = {
-  success: (msg: string) => alert(msg),
-  error: (msg: string) => alert(msg),
+  success: (msg: string) =>
+    useUIStore.getState().setNotification("Éxito", msg, "success"),
+  error: (msg: string) =>
+    useUIStore.getState().setNotification("Error", msg, "error"),
 };
 
 import { useAuth } from "@/features/auth/hooks/useAuth";

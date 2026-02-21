@@ -12,7 +12,7 @@ const DigitalVocaliaPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6">
+    <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PageHeader
         title={
           <>

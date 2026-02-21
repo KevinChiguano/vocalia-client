@@ -11,7 +11,7 @@ import { CategoryForm } from "../components/CategoryForm";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FiltersBar } from "@/components/ui/FiltersBar";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export const CategoriesTab = () => {
@@ -149,16 +149,7 @@ export const CategoriesTab = () => {
         }
       />
 
-      {/* Results count */}
-      {!loading && (
-        <div className="flex items-center justify-between text-sm text-text-muted px-1">
-          <span>
-            Mostrando {categories.length} de {pagination.total} categorias
-            {pagination.total !== 1 ? "s" : ""}
-          </span>
-        </div>
-      )}
-
+      {/* Results count removed from top, handled by PaginationFooter directly */}
       {categories.length > 0 ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -171,17 +162,15 @@ export const CategoriesTab = () => {
               />
             ))}{" "}
           </div>
-          {pagination.totalPages > 1 && (
-            <div className="flex justify-center pt-4">
-              <Pagination
-                page={pagination.page}
-                totalPages={pagination.totalPages}
-                onChange={(page) =>
-                  setPagination((prev) => ({ ...prev, page }))
-                }
-              />
-            </div>
-          )}
+          <PaginationFooter
+            currentCount={categories.length}
+            totalCount={pagination.total}
+            itemName={pagination.total !== 1 ? "categorías" : "categoría"}
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            onChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+            className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-6 border-t border-border/50"
+          />
         </>
       ) : (
         !loading && (
