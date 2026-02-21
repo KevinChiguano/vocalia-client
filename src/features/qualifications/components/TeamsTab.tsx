@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, X, Shield, Filter, Users } from "lucide-react";
+import { Plus, Search, X, Shield, Upload, PlusCircle } from "lucide-react";
 import { teamApi } from "../api/team.api";
 import { categoryApi } from "../api/category.api";
 import { Team, TeamFilters, CreateTeamDto } from "../types/team.types";
@@ -8,9 +8,7 @@ import { TeamCard } from "../components/TeamCard";
 import { TeamForm } from "../components/TeamForm";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { FiltersBar } from "@/components/ui/FiltersBar";
-import { Select } from "@/components/ui/Select";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export const TeamsTab = () => {
@@ -129,87 +127,97 @@ export const TeamsTab = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-text flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" />
-            Equipos
-          </h2>
-          <p className="text-text-muted text-sm">
-            Gestiona los equipos inscritos y sus categorías.
+      {/* Page Title & Actions */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-text">
+            Gestión de Equipos
+          </h1>
+          <p className="text-text-muted mt-1">
+            Administra los clubes, categorías y nóminas oficiales de la liga.
           </p>
         </div>
-        <Button
-          onClick={handleCreate}
-          disabled={categories.length === 0}
-          className="gap-2 shadow-lg hover:shadow-primary/20"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Nuevo Equipo</span>
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" className="gap-2">
+            <Upload className="w-5 h-5" />
+            <span>Importación Masiva</span>
+          </Button>
+          <Button
+            onClick={handleCreate}
+            disabled={categories.length === 0}
+            className="gap-2 shadow-lg hover:shadow-primary/20"
+          >
+            <PlusCircle className="w-5 h-5" />
+            <span>Nuevo Equipo</span>
+          </Button>
+        </div>
       </div>
 
-      <FiltersBar
-        left={
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
-            <div className="relative flex-1 sm:max-w-xs">
-              <Input
-                placeholder="Buscar equipo..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="w-full pr-10"
-              />
-              {searchInput && (
-                <button
-                  onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            <div className="min-w-[200px]">
-              <Select
-                icon={<Filter className="w-4 h-4" />}
-                value={filters.category}
-                onChange={(e) => handleCategoryFilter(e.target.value)}
-              >
-                <option value="">Todas las categorías</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <Button
-              onClick={handleSearch}
-              variant="secondary"
-              className="gap-2"
+      {/* Filters and Search */}
+      <div className="flex flex-col xl:flex-row justify-between gap-4 mb-2">
+        {/* Component for categories */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2 w-full xl:w-auto flex-1">
+          <button
+            onClick={() => handleCategoryFilter("")}
+            className={`flex items-center justify-center min-w-max gap-2 px-4 py-1.5 rounded-full font-medium text-sm whitespace-nowrap transition-colors border ${
+              filters.category === ""
+                ? "bg-primary text-white border-primary"
+                : "bg-surface hover:bg-primary/10 text-text-muted hover:text-primary border-border"
+            }`}
+          >
+            Todos
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryFilter(cat.id.toString())}
+              className={`flex items-center justify-center min-w-max gap-2 px-4 py-1.5 rounded-full font-medium text-sm whitespace-nowrap transition-colors border ${
+                filters.category === cat.id.toString()
+                  ? "bg-primary text-white border-primary"
+                  : "bg-surface hover:bg-primary/10 text-text-muted hover:text-primary border-border"
+              }`}
             >
-              <Search className="w-4 h-4" />
-              <span>Buscar</span>
-            </Button>
-          </div>
-        }
-      />
-
-      {/* Results count */}
-      {!loading && (
-        <div className="flex items-center justify-between text-sm text-text-muted px-1">
-          <span>
-            Mostrando {teams.length} de {pagination.total} equipos
-            {pagination.total !== 1 ? "s" : ""}
-          </span>
+              {cat.name}
+            </button>
+          ))}
         </div>
-      )}
 
-      {teams.length > 0 ? (
+        {/* Component for search */}
+        <div className="flex items-center gap-2 w-full xl:w-auto shrink-0 pb-2">
+          <span className="text-xs font-semibold text-text-muted uppercase tracking-widest whitespace-nowrap hidden sm:inline-block">
+            Buscar:
+          </span>
+          <div className="relative flex-1 sm:flex-none">
+            <Input
+              placeholder="Buscar equipo..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="w-full sm:w-64 h-9 text-sm"
+            />
+            {searchInput && (
+              <button
+                onClick={handleClearSearch}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          <Button
+            size="sm"
+            onClick={handleSearch}
+            variant="secondary"
+            className="h-9"
+          >
+            <Search className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {teams.length > 0 || filters.search || filters.category ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4">
             {teams.map((team) => (
               <TeamCard
                 key={team.id}
@@ -218,18 +226,33 @@ export const TeamsTab = () => {
                 onDelete={setDeleteId}
               />
             ))}
+            {/* Add New Card Placeholder */}
+            <button
+              onClick={handleCreate}
+              disabled={categories.length === 0}
+              className="group flex flex-col items-center justify-center p-8 bg-surface/50 border-2 border-dashed border-border rounded-2xl hover:border-primary/50 hover:bg-primary/5 transition-all min-h-[300px] h-full"
+            >
+              <div className="w-14 h-14 rounded-full bg-elevated flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-all shadow-soft group-hover:shadow-primary/20">
+                <Plus className="w-8 h-8" />
+              </div>
+              <span className="font-bold text-text-muted group-hover:text-primary transition-colors text-lg">
+                Crear Nuevo Equipo
+              </span>
+              <p className="text-sm text-text-muted mt-2 text-center max-w-[200px]">
+                Registra un nuevo club y asigna su categoría
+              </p>
+            </button>
           </div>
-          {pagination.totalPages > 1 && (
-            <div className="flex justify-center pt-8">
-              <Pagination
-                page={pagination.page}
-                totalPages={pagination.totalPages}
-                onChange={(page) =>
-                  setPagination((prev) => ({ ...prev, page }))
-                }
-              />
-            </div>
-          )}
+
+          <PaginationFooter
+            currentCount={teams.length}
+            totalCount={pagination.total}
+            itemName="equipos"
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            onChange={(page) => setPagination((prev) => ({ ...prev, page }))}
+            className="mt-12 flex flex-col sm:flex-row items-center justify-between border-t border-border/50 pt-6 gap-4"
+          />
         </>
       ) : (
         !loading && (
@@ -240,9 +263,17 @@ export const TeamsTab = () => {
             <p className="text-text font-bold text-2xl">
               No se encontraron equipos
             </p>
-            <p className="text-text-muted">
+            <p className="text-text-muted mt-2">
               Empieza registrando un equipo en una categoría.
             </p>
+            <Button
+              onClick={handleCreate}
+              disabled={categories.length === 0}
+              className="mt-6 gap-2"
+            >
+              <PlusCircle className="w-5 h-5" />
+              <span>Crear mi primer equipo</span>
+            </Button>
           </div>
         )
       )}

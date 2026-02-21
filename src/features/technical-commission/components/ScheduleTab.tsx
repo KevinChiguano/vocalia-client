@@ -17,6 +17,7 @@ import { useTournaments } from "@/features/administration/hooks/useTournaments";
 import { useTeams } from "@/features/qualifications/api/team.hooks";
 import { useCategories } from "@/features/qualifications/api/category.hooks";
 import { useUsers } from "@/features/administration/hooks/useUsers";
+import { useUIStore } from "@/store/ui.store";
 
 import { Select } from "@/components/ui/Select";
 
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
+  const { setNotification } = useUIStore();
   const [tournamentId, setTournamentId] = useState<number>(0);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [fecha, setFecha] = useState(1);
@@ -179,7 +181,7 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
 
   const handleSave = async () => {
     if (!tournamentId) {
-      alert("Selecciona un torneo primero");
+      setNotification("Atención", "Selecciona un torneo primero", "error");
       return;
     }
 
@@ -200,7 +202,7 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
       });
 
       if (allRows.length === 0) {
-        alert("No hay partidos para guardar");
+        setNotification("Atención", "No hay partidos para guardar", "info");
         return;
       }
 
@@ -216,8 +218,10 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
       );
 
       if (incompleteMatch) {
-        alert(
+        setNotification(
+          "Error",
           "Todos los partidos deben tener equipo local, visitante y vocal asignado.",
+          "error",
         );
         return;
       }
@@ -236,7 +240,11 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
           vocalUserId: firstMatch.vocalUserId,
           fieldId: firstMatch.fieldId,
         });
-        alert("Partido actualizado correctamente");
+        setNotification(
+          "Éxito",
+          "Partido actualizado correctamente",
+          "success",
+        );
         onCancelEdit?.();
       } else {
         await scheduleApi.saveProgrammingSheet({
@@ -245,11 +253,15 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
           matchDay: fecha,
           rows: allRows,
         });
-        alert("Hoja de programación guardada correctamente");
+        setNotification(
+          "Éxito",
+          "Hoja de programación guardada correctamente",
+          "success",
+        );
       }
     } catch (error) {
       console.error(error);
-      alert("Error al guardar la hoja");
+      setNotification("Error", "Error al guardar la hoja", "error");
     }
   };
 
@@ -286,8 +298,10 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
       pdf.save(`programacion-fecha-${fecha}.pdf`);
     } catch (err) {
       console.error("PDF export failed", err);
-      alert(
+      setNotification(
+        "Error",
         "Error al exportar a PDF. Asegúrate de que las imágenes estén cargadas.",
+        "error",
       );
     } finally {
       setIsExporting(false);

@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  X,
   Save,
   User,
   Hash,
@@ -19,6 +18,8 @@ import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
 import { Category } from "../types/category.types";
 import { formatDateForInput } from "@/utils/dateUtils";
+import { Modal } from "@/components/ui/Modal";
+import { Checkbox } from "@/components/ui/Checkbox";
 
 const playerSchema = z.object({
   dni: z
@@ -117,275 +118,255 @@ export const PlayerForm = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-overlay backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl ui-card overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 max-h-[95vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-elevated shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <User className="w-5 h-5 text-primary" />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={initialData ? "Editar Jugador" : "Nuevo Jugador"}
+      maxWidth="2xl"
+    >
+      {/* Form */}
+      <form
+        onSubmit={handleSubmit((data) =>
+          onSubmit(data as unknown as CreatePlayerDto),
+        )}
+        className="space-y-6 overflow-y-auto max-h-[75vh] custom-scrollbar"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Photo Preview */}
+          <div className="flex flex-col items-center gap-3">
+            <label className="ui-label self-start">Foto del Jugador</label>
+            <div className="w-32 h-40 rounded-2xl bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden relative group">
+              {imageUrl && !errors.imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <ImageIcon className="w-10 h-10 opacity-20" />
+              )}
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <p className="text-[10px] text-white font-medium text-center px-2">
+                  Vista Previa
+                </p>
+              </div>
             </div>
-            <h2 className="type-h3 font-bold text-primary">
-              {initialData ? "Editar Jugador" : "Nuevo Jugador"}
-            </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-text-muted hover:text-text hover:bg-hover rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          {/* Basic Info & Identification Wrapper */}
+          <div className="md:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="ui-label">
+                  Nombre
+                </Label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <Input
+                    id="name"
+                    placeholder="Ej: Marco"
+                    className=""
+                    {...register("name")}
+                  />
+                </div>
+                {errors.name?.message && (
+                  <p className="text-xs text-danger font-medium">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="lastname" className="ui-label">
+                  Apellido
+                </Label>
+                <Input
+                  id="lastname"
+                  placeholder="Ej: Velez"
+                  {...register("lastname")}
+                />
+                {errors.lastname?.message && (
+                  <p className="text-xs text-danger font-medium">
+                    {errors.lastname.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="dni" className="ui-label">
+                  DNI
+                </Label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <Input
+                    id="dni"
+                    placeholder="1723456789"
+                    className=""
+                    disabled={!!initialData}
+                    {...register("dni")}
+                  />
+                </div>
+                {errors.dni?.message && (
+                  <p className="text-xs text-danger font-medium">
+                    {errors.dni.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="number" className="ui-label">
+                  Número de Camiseta
+                </Label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                    <Hash className="w-4 h-4" />
+                  </div>
+                  <Input
+                    id="number"
+                    type="number"
+                    placeholder="10"
+                    className=""
+                    {...register("number")}
+                  />
+                </div>
+                {errors.number?.message && (
+                  <p className="text-xs text-danger font-medium">
+                    {errors.number.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit((data) =>
-            onSubmit(data as unknown as CreatePlayerDto),
-          )}
-          className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Photo Preview */}
-            <div className="flex flex-col items-center gap-3">
-              <label className="ui-label self-start">Foto del Jugador</label>
-              <div className="w-32 h-40 rounded-2xl bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden relative group">
-                {imageUrl && !errors.imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <ImageIcon className="w-10 h-10 opacity-20" />
-                )}
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-[10px] text-white font-medium text-center px-2">
-                    Vista Previa
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Basic Info & Identification Wrapper */}
-            <div className="md:col-span-2 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="name" className="ui-label">
-                    Nombre
-                  </Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
-                      <User className="w-4 h-4" />
-                    </div>
-                    <Input
-                      id="name"
-                      placeholder="Ej: Marco"
-                      className=""
-                      {...register("name")}
-                    />
-                  </div>
-                  {errors.name?.message && (
-                    <p className="text-xs text-danger font-medium">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="lastname" className="ui-label">
-                    Apellido
-                  </Label>
-                  <Input
-                    id="lastname"
-                    placeholder="Ej: Velez"
-                    {...register("lastname")}
-                  />
-                  {errors.lastname?.message && (
-                    <p className="text-xs text-danger font-medium">
-                      {errors.lastname.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="dni" className="ui-label">
-                    DNI
-                  </Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
-                      <CreditCard className="w-4 h-4" />
-                    </div>
-                    <Input
-                      id="dni"
-                      placeholder="1723456789"
-                      className=""
-                      disabled={!!initialData}
-                      {...register("dni")}
-                    />
-                  </div>
-                  {errors.dni?.message && (
-                    <p className="text-xs text-danger font-medium">
-                      {errors.dni.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="number" className="ui-label">
-                    Número de Camiseta
-                  </Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
-                      <Hash className="w-4 h-4" />
-                    </div>
-                    <Input
-                      id="number"
-                      type="number"
-                      placeholder="10"
-                      className=""
-                      {...register("number")}
-                    />
-                  </div>
-                  {errors.number?.message && (
-                    <p className="text-xs text-danger font-medium">
-                      {errors.number.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Select
-                label="Categoría (Obligatorio)"
-                id="categoryId"
-                error={errors.categoryId?.message}
-                {...register("categoryId", { valueAsNumber: true })}
-              >
-                <option value={0} disabled>
-                  Selecciona una categoría
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Select
+              label="Categoría (Obligatorio)"
+              id="categoryId"
+              error={errors.categoryId?.message}
+              {...register("categoryId", { valueAsNumber: true })}
+            >
+              <option value={0} disabled>
+                Selecciona una categoría
+              </option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
                 </option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
+              ))}
+            </Select>
+          </div>
 
-            <div className="space-y-1.5">
-              <Select
-                label="Equipo (Obligatorio)"
-                id="teamId"
-                error={errors.teamId?.message}
-                {...register("teamId", { valueAsNumber: true })}
-              >
-                <option value={0} disabled>
-                  Selecciona un equipo
+          <div className="space-y-1.5">
+            <Select
+              label="Equipo (Obligatorio)"
+              id="teamId"
+              error={errors.teamId?.message}
+              {...register("teamId", { valueAsNumber: true })}
+            >
+              <option value={0} disabled>
+                Selecciona un equipo
+              </option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
                 </option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
+              ))}
+            </Select>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="birthDate" className="ui-label">
-                Fecha de Nacimiento
-              </Label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <Input
-                  id="birthDate"
-                  type="date"
-                  className=""
-                  {...register("birthDate")}
-                />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="birthDate" className="ui-label">
+              Fecha de Nacimiento
+            </Label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                <Calendar className="w-4 h-4" />
               </div>
-              {errors.birthDate?.message && (
-                <p className="text-xs text-danger font-medium">
-                  {errors.birthDate.message}
-                </p>
-              )}
+              <Input
+                id="birthDate"
+                type="date"
+                className=""
+                {...register("birthDate")}
+              />
             </div>
+            {errors.birthDate?.message && (
+              <p className="text-xs text-danger font-medium">
+                {errors.birthDate.message}
+              </p>
+            )}
+          </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="imageUrl" className="ui-label">
-                URL de la Imagen
-              </Label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
-                  <ImageIcon className="w-4 h-4" />
-                </div>
-                <Input
-                  id="imageUrl"
-                  placeholder="https://ejemplo.com/jugador.png"
-                  className=""
-                  {...register("imageUrl")}
-                />
+          <div className="space-y-1.5">
+            <Label htmlFor="imageUrl" className="ui-label">
+              URL de la Imagen
+            </Label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+                <ImageIcon className="w-4 h-4" />
               </div>
-              {errors.imageUrl?.message && (
-                <p className="text-xs text-danger font-medium">
-                  {errors.imageUrl.message}
-                </p>
-              )}
+              <Input
+                id="imageUrl"
+                placeholder="https://ejemplo.com/jugador.png"
+                className=""
+                {...register("imageUrl")}
+              />
             </div>
+            {errors.imageUrl?.message && (
+              <p className="text-xs text-danger font-medium">
+                {errors.imageUrl.message}
+              </p>
+            )}
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 pt-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              className="w-5 h-5 text-primary rounded border-border focus:ring-2 focus:ring-primary/30 cursor-pointer"
-              {...register("isActive")}
-            />
-            <label
-              htmlFor="isActive"
-              className="ui-label cursor-pointer select-none"
-            >
-              Jugador Activo
-            </label>
-          </div>
+        <div className="flex items-center gap-3 pt-2">
+          <Checkbox id="isActive" {...register("isActive")} />
+          <label
+            htmlFor="isActive"
+            className="ui-label cursor-pointer select-none"
+          >
+            Jugador Activo
+          </label>
+        </div>
 
-          <div className="flex justify-end gap-3 pt-6 border-t border-border mt-2 shrink-0">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onClose}
-              className="px-6"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="gap-2 min-w-[140px] shadow-lg shadow-primary/20 relative"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Guardando...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Guardar Jugador</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-3 pt-6 border-t border-border mt-2 shrink-0">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            className="px-6"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="gap-2 min-w-[140px] shadow-lg shadow-primary/20 relative"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Guardando...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Guardar Jugador</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };

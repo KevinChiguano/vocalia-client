@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import {
-  Plus,
   Search,
   X,
   Users,
-  Filter,
   Edit,
   Trash2,
   UserSearch,
+  Shield,
+  ArrowLeft,
+  Upload,
+  UserPlus,
 } from "lucide-react";
 import { playerApi } from "../api/player.api";
 import { teamApi } from "../api/team.api";
@@ -18,27 +20,29 @@ import { Category } from "../types/category.types";
 import { PlayerForm } from "../components/PlayerForm";
 import { BulkImportPlayerModal } from "./BulkImportPlayerModal";
 import { formatDateForDisplay } from "@/utils/dateUtils";
-import { Tag, Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { FiltersBar } from "@/components/ui/FiltersBar";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { LimitSelector } from "@/components/ui/LimitSelector";
-import { Select } from "@/components/ui/Select";
 import { BaseTable } from "@/components/ui/Table";
 import { Badge } from "@/components/ui/Badge";
 import { InlineSpinner } from "@/components/ui/InlineSpinner";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useUIStore } from "@/store/ui.store";
 
 export const PlayersTab = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const setCustomBreadcrumbs = useUIStore(
+    (state) => state.setCustomBreadcrumbs,
+  );
   const initialTeamId = searchParams.get("teamId");
   const initialCategoryId = searchParams.get("categoryId");
 
   const [players, setPlayers] = useState<Player[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [activeTeam, setActiveTeam] = useState<Team | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -80,7 +84,7 @@ export const PlayersTab = () => {
   const fetchData = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const [playersData, teamsData, categoriesData] = await Promise.all([
+      const promises: Promise<any>[] = [
         playerApi.getPlayers(
           {
             page: pagination.page,
@@ -92,13 +96,26 @@ export const PlayersTab = () => {
           },
           { silent },
         ),
-        teamApi.getTeams({ limit: 100 }, { silent }), // For team filter & selection
-        categoryApi.getCategories({ limit: 100 }, { silent }), // For category selection
-      ]);
+        categoryApi.getCategories({ limit: 100 }, { silent }),
+      ];
+
+      // Only fetch the active team if we have a teamId and haven't fetched it yet
+      // OR if the filter teamId changed
+      if (filters.teamId && (!activeTeam || activeTeam.id !== filters.teamId)) {
+        promises.push(teamApi.getTeamById(filters.teamId));
+      }
+
+      const results = await Promise.all(promises);
+      const playersData = results[0];
+      const categoriesData = results[1];
+
       setPlayers(playersData.data || []);
       setPagination((prev) => ({ ...prev, ...playersData.meta }));
-      setTeams(teamsData.data || []);
       setCategories(categoriesData.data || []);
+
+      if (results[2]) {
+        setActiveTeam(results[2]);
+      }
     } catch (error: any) {
       console.error("Error fetching players/teams", error);
       setPlayers([]);
@@ -118,6 +135,17 @@ export const PlayersTab = () => {
     filters.active,
   ]);
 
+  // Handle custom breadcrumbs
+  useEffect(() => {
+    if (activeTeam) {
+      setCustomBreadcrumbs([
+        { label: "Equipos", path: "/qualifications" },
+        { label: activeTeam.name },
+      ]);
+    }
+    return () => setCustomBreadcrumbs(null);
+  }, [activeTeam, setCustomBreadcrumbs]);
+
   const handleSearch = () => {
     setFilters((prev) => ({ ...prev, search: searchInput.trim() }));
     setPagination((prev) => ({ ...prev, page: 1 }));
@@ -129,33 +157,8 @@ export const PlayersTab = () => {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  const handleTeamFilter = (teamId: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      teamId: teamId ? Number(teamId) : undefined,
-    }));
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  const handleCategoryFilter = (categoryId: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      categoryId: categoryId ? Number(categoryId) : undefined,
-      teamId: undefined, // Reset team when category changes
-    }));
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  const resetFilters = () => {
-    setSearchInput("");
-    setFilters({
-      search: "",
-      teamId: undefined,
-      categoryId: undefined,
-      active: undefined,
-    });
-    setPagination((prev) => ({ ...prev, page: 1 }));
-    navigate(window.location.pathname, { replace: true });
+  const handleBackToTeams = () => {
+    navigate("?", { replace: true });
   };
 
   const handleCreate = () => {
@@ -201,32 +204,25 @@ export const PlayersTab = () => {
   const columns = [
     { key: "photo", label: "Foto", width: "60px" },
     {
-      key: "dni",
-      label: "DNI",
-      width: "110px",
-      sortable: true,
-      sortValue: (r: Player) => r.dni,
-    },
-    {
       key: "name",
-      label: "Jugador",
+      label: "Nombre del Jugador",
       width: "200px",
       sortable: true,
       sortValue: (r: Player) => `${r.name} ${r.lastname || ""}`,
     },
     {
-      key: "number",
-      label: "N°",
-      width: "60px",
+      key: "dni",
+      label: "DNI / Cédula",
+      width: "120px",
       sortable: true,
-      sortValue: (r: Player) => r.number || 0,
+      sortValue: (r: Player) => r.dni,
     },
     {
-      key: "team",
-      label: "Equipo",
-      width: "150px",
+      key: "number",
+      label: "Camiseta",
+      width: "100px",
       sortable: true,
-      sortValue: (r: Player) => r.team?.name || "",
+      sortValue: (r: Player) => r.number || 0,
     },
     {
       key: "category",
@@ -235,356 +231,334 @@ export const PlayersTab = () => {
       sortable: true,
       sortValue: (r: Player) => r.category?.name || "",
     },
-    { key: "status", label: "Estado", width: "100px" },
-    { key: "actions", label: "Acciones", width: "100px" },
+    { key: "status", label: "Estado", width: "120px" },
+    {
+      key: "actions",
+      label: "Acciones",
+      width: "100px",
+      align: "right" as any,
+    },
   ];
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-text flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" />
-            Jugadores
-          </h2>
-          <p className="text-text-muted text-sm">
-            Gestiona la nómina de jugadores de todos los equipos.
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsImportModalOpen(true)}
-          variant="outline"
-          disabled={teams.length === 0}
-          className="gap-2"
-        >
-          <Upload className="w-5 h-5" />
-          <span>Importar (Excel)</span>
-        </Button>
-        <Button
-          onClick={handleCreate}
-          disabled={teams.length === 0}
-          className="gap-2 shadow-lg hover:shadow-primary/20"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Nuevo Jugador</span>
-        </Button>
+  if (!filters.teamId) {
+    // Failsafe in case somehow rendered without a teamId.
+    return (
+      <div className="flex justify-center p-8">
+        <Button onClick={handleBackToTeams}>Ir a Equipos</Button>
       </div>
+    );
+  }
 
-      <FiltersBar
-        left={
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
-            <div className="relative flex-1 sm:max-w-xs">
-              <Input
-                placeholder="Buscar por DNI o nombre..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="w-full pr-10"
-              />
-              {searchInput && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={handleClearSearch}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-text h-8 w-8 p-0"
-                >
-                  x
-                </Button>
+  return (
+    <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <PageHeader
+        title={
+          <span className="flex items-center gap-4">
+            <span className="w-14 h-14 rounded-xl bg-linear-to-br from-primary to-red-900 p-2.5 flex items-center justify-center shadow-lg shadow-primary/20 overflow-hidden shrink-0">
+              {activeTeam?.logo ? (
+                <img
+                  src={activeTeam.logo}
+                  alt="Logo"
+                  className="w-full h-full object-contain drop-shadow"
+                />
+              ) : (
+                <Shield className="text-white w-8 h-8" />
               )}
-            </div>
-
-            <div className="min-w-[180px]">
-              <Select
-                icon={<Tag className="w-4 h-4" />}
-                value={filters.categoryId || ""}
-                onChange={(e) => handleCategoryFilter(e.target.value)}
-              >
-                <option value="">Todas las categorías</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="min-w-[180px]">
-              <Select
-                icon={<Filter className="w-4 h-4" />}
-                value={filters.teamId || ""}
-                onChange={(e) => handleTeamFilter(e.target.value)}
-              >
-                <option value="">Todos los equipos</option>
-                {teams
-                  .filter((t) =>
-                    filters.categoryId
-                      ? t.categoryId === filters.categoryId
-                      : true,
-                  )
-                  .map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
-              </Select>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSearch}
-                variant="secondary"
-                className="gap-2"
-              >
-                <Search className="w-4 h-4" />
-                <span className="hidden sm:inline">Buscar</span>
-              </Button>
-              {(filters.search || filters.teamId || filters.categoryId) && (
-                <Button
-                  onClick={resetFilters}
-                  variant="ghost"
-                  className="text-text-muted hover:text-red-500 gap-2"
-                  title="Limpiar filtros"
-                >
-                  <X className="w-4 h-4" />
-                  <span className="hidden lg:inline">Limpiar</span>
-                </Button>
-              )}
-            </div>
-          </div>
+            </span>
+            <span>
+              Nómina:{" "}
+              <span className="text-primary">
+                {activeTeam?.name || "Cargando..."}
+              </span>
+            </span>
+          </span>
+        }
+        description="Gestión centralizada de plantilla y jugadores federados."
+        actions={
+          <Button
+            variant="secondary"
+            className="h-11 px-6 gap-2 group border-border hover:bg-surface-hover shrink-0 font-semibold"
+            onClick={handleBackToTeams}
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            Regresar a Equipos
+          </Button>
         }
       />
 
-      {loading ? (
-        <div className="flex items-center justify-center py-24">
-          <InlineSpinner label="Cargando jugadores..." size={40} />
-        </div>
-      ) : players.length > 0 ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-end">
-            <LimitSelector
-              value={pagination.limit}
-              onChange={(limit) =>
-                setPagination((prev) => ({ ...prev, limit, page: 1 }))
-              }
-            />
+      <div className="flex flex-col flex-1 gap-6">
+        {/* Action Toolbar */}
+        <div className="bg-surface p-4 rounded-xl border border-border flex flex-col lg:flex-row gap-4">
+          <div className="flex flex-1 flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted w-5 h-5" />
+              <Input
+                className="w-full pl-10 h-11 bg-background text-text"
+                placeholder="Buscar por nombre o DNI..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              {searchInput && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="secondary"
+              className="h-11 px-6 gap-2"
+              onClick={() => setIsImportModalOpen(true)}
+              disabled={!activeTeam}
+            >
+              <Upload className="w-5 h-5" />
+              <span>Importar Excel</span>
+            </Button>
+            <Button
+              className="h-11 px-6 gap-2 shadow-lg shadow-primary/20"
+              onClick={handleCreate}
+              disabled={!activeTeam}
+            >
+              <UserPlus className="w-5 h-5" />
+              <span className="font-bold">Nuevo Jugador</span>
+            </Button>
+          </div>
+        </div>
 
-          <BaseTable
-            columns={columns}
-            data={players}
-            renderRow={(player: Player) => [
-              <div className="w-10 h-10 rounded-full bg-surface border border-border overflow-hidden">
-                {player.imageUrl ? (
-                  <img
-                    src={player.imageUrl}
-                    alt={player.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                    <Users className="w-5 h-5 text-primary" />
-                  </div>
-                )}
-              </div>,
-              <span className="font-mono text-sm">{player.dni}</span>,
-              <div className="flex flex-col">
-                <span className="font-bold text-text">
-                  {player.name} {player.lastname}
-                </span>
-                {player.birthDate && (
-                  <span className="text-xs text-text-muted">
-                    {formatDateForDisplay(player.birthDate)}
-                  </span>
-                )}
-              </div>,
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/5 text-primary font-black">
-                {player.number || "-"}
-              </div>,
-              <span className="text-sm font-medium">
-                {player.team?.name || "Sin equipo"}
-              </span>,
-              <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                {player.category?.name || "-"}
-              </span>,
-              <Badge variant={player.isActive ? "success" : "danger"} size="sm">
-                {player.isActive ? "Activo" : "Inactivo"}
-              </Badge>,
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleEdit(player)}
-                  className="text-primary hover:bg-primary/10 border-primary/20"
-                  title="Editar"
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => setDeleteDni(player.dni)}
-                  title="Eliminar"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>,
-            ]}
-            renderMobileRow={(player: Player) => (
-              <div className="space-y-4">
-                {/* Header con foto, nombre y acciones */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full border border-border overflow-hidden bg-surface shrink-0">
+        {/* Players Table Area */}
+        <div className="flex flex-col gap-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-24 bg-surface rounded-xl border border-border">
+              <InlineSpinner label="Cargando jugadores..." size={40} />
+            </div>
+          ) : players.length > 0 ? (
+            <>
+              {/* Top Control Bar: Limit Selector */}
+              <div className="flex items-center justify-end">
+                <LimitSelector
+                  value={pagination.limit}
+                  onChange={(limit) =>
+                    setPagination((prev) => ({ ...prev, limit, page: 1 }))
+                  }
+                />
+              </div>
+
+              {/* Table */}
+              <BaseTable
+                columns={columns}
+                data={players}
+                renderRow={(player: Player) => [
+                  <div className="w-10 h-10 rounded-full bg-surface border border-border/50 overflow-hidden shrink-0">
                     {player.imageUrl ? (
                       <img
                         src={player.imageUrl}
+                        alt={player.name}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                        <Users className="w-6 h-6 text-primary" />
+                        <Users className="w-5 h-5 text-primary" />
                       </div>
                     )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-text truncate">
+                  </div>,
+                  <div className="flex flex-col">
+                    <span className="font-medium text-text">
                       {player.name} {player.lastname}
-                    </h4>
-                    <p className="text-xs text-text-muted">DNI: {player.dni}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                    </span>
+                    {player.birthDate && (
+                      <span className="text-xs text-text-muted">
+                        Nac.: {formatDateForDisplay(player.birthDate)}
+                      </span>
+                    )}
+                  </div>,
+                  <span className="font-mono text-text-muted">
+                    {player.dni}
+                  </span>,
+                  <div className="inline-flex items-center justify-center size-8 rounded-full bg-primary/20 text-primary font-bold text-sm border border-primary/30">
+                    {player.number || "0"}
+                  </div>,
+                  <span className="text-text-muted">
+                    {player.category?.name || "-"}
+                  </span>,
+                  <Badge
+                    variant={player.isActive ? "success" : "danger"}
+                    size="sm"
+                    className="font-bold"
+                  >
+                    {player.isActive ? "Activo" : "Inactivo"}
+                  </Badge>,
+                  <div className="flex items-center justify-end gap-2">
                     <Button
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleEdit(player)}
-                      className="text-primary bg-primary/5 hover:bg-primary/10 border-primary/20"
+                      className="text-text-muted hover:text-text hover:bg-surface-hover h-9 w-9 p-0"
+                      title="Editar"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-5 h-5" />
                     </Button>
                     <Button
-                      variant="danger"
+                      variant="ghost"
                       size="sm"
                       onClick={() => setDeleteDni(player.dni)}
-                      className="flex-1 gap-2"
+                      className="text-text-muted hover:text-red-500 hover:bg-red-500/10 h-9 w-9 p-0"
+                      title="Eliminar"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </Button>
-                  </div>
-                </div>
-
-                {/* Información en formato label: valor con grid responsivo */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 pt-2 border-t border-border text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-text-muted min-w-[70px]">
-                      Número:
-                    </span>
-                    <span className="font-black text-primary">
-                      #{player.number || "-"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-text-muted min-w-[70px]">
-                      Equipo:
-                    </span>
-                    <span className="text-text font-medium truncate">
-                      {player.team?.name || "-"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-text-muted min-w-[70px]">
-                      Categoría:
-                    </span>
-                    <span className="text-text font-medium truncate">
-                      {player.category?.name || "-"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-text-muted min-w-[70px]">
-                      Estado:
-                    </span>
-                    <Badge variant={player.isActive ? "success" : "danger"}>
-                      {player.isActive ? "Activo" : "Inactivo"}
-                    </Badge>
-                  </div>
-
-                  {player.birthDate && (
-                    <div className="flex items-center gap-2 sm:col-span-2">
-                      <span className="text-text-muted min-w-[70px]">
-                        Fecha Nac.:
-                      </span>
-                      <span className="text-text">
-                        {formatDateForDisplay(player.birthDate)}
-                      </span>
+                  </div>,
+                ]}
+                renderMobileRow={(player: Player) => (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full border border-border/50 overflow-hidden bg-surface shrink-0">
+                        {player.imageUrl ? (
+                          <img
+                            src={player.imageUrl}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                            <Users className="w-6 h-6 text-primary" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-text truncate">
+                          {player.name} {player.lastname}
+                        </h4>
+                        <p className="text-xs text-text-muted font-mono">
+                          {player.dni}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(player)}
+                          className="text-text-muted hover:text-text bg-surface-hover"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteDni(player.dni)}
+                          className="text-text-muted hover:text-red-500 bg-surface-hover hover:bg-red-500/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            )}
-          />
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-            <p className="text-sm text-text-muted">
-              Mostrando {players.length} de {pagination.total} jugadores
-            </p>
-            {pagination.totalPages > 1 && (
-              <Pagination
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-text-muted min-w-[70px]">
+                          Camiseta:
+                        </span>
+                        <span className="font-black text-primary">
+                          {player.number || "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-text-muted min-w-[70px]">
+                          Estado:
+                        </span>
+                        <Badge variant={player.isActive ? "success" : "danger"}>
+                          {player.isActive ? "Activo" : "Inactivo"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 sm:col-span-2">
+                        <span className="text-text-muted min-w-[70px]">
+                          Categoría:
+                        </span>
+                        <span className="text-text font-medium truncate">
+                          {player.category?.name || "-"}
+                        </span>
+                      </div>
+                      {player.birthDate && (
+                        <div className="flex items-center gap-2 sm:col-span-2">
+                          <span className="text-text-muted min-w-[70px]">
+                            Fecha Nac.:
+                          </span>
+                          <span className="text-text">
+                            {formatDateForDisplay(player.birthDate)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              />
+
+              {/* Bottom Control Bar: Pagination */}
+              <PaginationFooter
+                currentCount={players.length}
+                totalCount={pagination.total}
+                itemName="jugadores registrados"
                 page={pagination.page}
                 totalPages={pagination.totalPages}
                 onChange={(page) =>
                   setPagination((prev) => ({ ...prev, page }))
                 }
+                className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2"
               />
-            )}
-          </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-24 px-4 bg-surface/50 border border-border/50 rounded-xl">
+              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                <UserSearch className="w-12 h-12 text-primary opacity-50" />
+              </div>
+              <p className="text-text font-bold text-2xl text-center">
+                No se encontraron jugadores
+              </p>
+              <p className="text-text-muted text-center max-w-sm mt-2">
+                {filters.search
+                  ? "Prueba buscando con otro término."
+                  : "Empieza registrando jugadores en la nómina de este equipo."}
+              </p>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-24 bg-surface/50 border border-border border-dashed rounded-4xl">
-          <div className="w-24 h-24 rounded-full bg-primary-soft flex items-center justify-center mb-6">
-            <UserSearch className="w-12 h-12 text-primary opacity-30" />
-          </div>
-          <p className="text-text font-bold text-2xl">
-            No se encontraron jugadores
-          </p>
-          <p className="text-text-muted text-center max-w-sm">
-            {filters.search || filters.teamId
-              ? "Prueba ajustando los filtros o realiza una nueva búsqueda."
-              : "Empieza registrando jugadores en tus equipos."}
-          </p>
-        </div>
-      )}
 
-      {teams.length > 0 && (
-        <PlayerForm
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          onSubmit={handleFormSubmit}
-          initialData={editingPlayer}
-          teams={teams}
-          categories={categories}
-          isLoading={formLoading}
+        {activeTeam && categories.length > 0 && (
+          <PlayerForm
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
+            onSubmit={handleFormSubmit}
+            initialData={editingPlayer}
+            teams={[activeTeam]}
+            categories={categories}
+            isLoading={formLoading}
+          />
+        )}
+
+        <ConfirmModal
+          open={!!deleteDni}
+          onClose={() => setDeleteDni(null)}
+          onConfirm={handleConfirmDelete}
+          title="Eliminar Jugador"
+          description="Esta acción eliminará al jugador de forma permanente. ¿Deseas continuar?"
+          danger
         />
-      )}
 
-      <ConfirmModal
-        open={!!deleteDni}
-        onClose={() => setDeleteDni(null)}
-        onConfirm={handleConfirmDelete}
-        title="Eliminar Jugador"
-        description="Esta acción eliminará al jugador de forma permanente. ¿Deseas continuar?"
-        danger
-      />
-
-      <BulkImportPlayerModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onSuccess={() => fetchData()}
-        teamId={filters.teamId}
-        categoryId={filters.categoryId}
-        teams={teams}
-        categories={categories}
-      />
+        {activeTeam && (
+          <BulkImportPlayerModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onSuccess={() => fetchData()}
+            teamId={activeTeam.id}
+            categoryId={activeTeam.categoryId || undefined}
+            teams={[activeTeam]}
+            categories={categories}
+          />
+        )}
+      </div>
     </div>
   );
 };

@@ -23,6 +23,20 @@ export const scheduleApi = {
     return response.data;
   },
 
+  createMatch: async (data: {
+    tournamentId: number;
+    stage: string;
+    matchDate: string;
+    localTeamId: number;
+    awayTeamId: number;
+    categoryId?: number;
+    vocalUserId?: number;
+    fieldId?: number;
+  }) => {
+    const response = await api.post("/matches", data);
+    return response.data;
+  },
+
   getMatches: async (params: {
     tournamentId?: number;
     matchDay?: number;

@@ -2,6 +2,7 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { Topbar } from "@/components/layout/Topbar";
 import { Spinner } from "@/components/ui/Spinner";
 import { ErrorModal } from "@/components/ui/ErrorModal";
+import { NotificationModal } from "@/components/ui/NotificationModal";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft } from "lucide-react";
@@ -14,6 +15,7 @@ export const AppLayout = () => {
       <div className="flex flex-col min-h-screen">
         <Spinner />
         <ErrorModal />
+        <NotificationModal />
         <Topbar />
 
         <main

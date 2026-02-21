@@ -26,6 +26,7 @@ import { Card } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
 import { useUIStore } from "@/store/ui.store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const getImageUrl = (path?: string) => {
   if (!path) return "";
@@ -237,19 +238,19 @@ export const TournamentTeamsPage = () => {
   return (
     <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="type-h2 font-black flex items-center gap-2">
-              <Users className="w-8 h-8 text-primary" />
-              Gestión de <span className="text-primary">Equipos</span>
-            </h1>
-            <p className="text-text-muted">
-              Torneo: <span className="text-primary">{tournament.name}</span>
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={
+          <span className="flex items-center gap-2">
+            <Users className="w-8 h-8 text-primary" />
+            Gestión de <span className="text-primary">Equipos</span>
+          </span>
+        }
+        description={
+          <>
+            Torneo: <span className="text-primary">{tournament.name}</span>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-12">
         {/* Left Side: Search and Inscribed */}

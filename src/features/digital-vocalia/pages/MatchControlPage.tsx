@@ -43,7 +43,7 @@ const MatchControlPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex items-center gap-4">
         <PageHeader
           title={
@@ -59,9 +59,16 @@ const MatchControlPage = () => {
 
       <Tabs defaultValue="players" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="players">Jugadores (Planilla)</TabsTrigger>
-          <TabsTrigger value="events">Eventos (Goles/Tarjetas)</TabsTrigger>
-          <TabsTrigger value="summary">Resumen y Acta</TabsTrigger>
+          <TabsTrigger value="players">
+            Jugadores <span className="hidden md:inline ml-1">(Planilla)</span>
+          </TabsTrigger>
+          <TabsTrigger value="events">
+            Eventos{" "}
+            <span className="hidden md:inline ml-1">(Goles/Tarjetas)</span>
+          </TabsTrigger>
+          <TabsTrigger value="summary">
+            Resumen <span className="hidden md:inline ml-1">y Acta</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="players">

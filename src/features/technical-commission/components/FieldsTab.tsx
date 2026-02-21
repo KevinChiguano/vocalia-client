@@ -7,6 +7,7 @@ import { FieldForm } from "./FieldForm";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FiltersBar } from "@/components/ui/FiltersBar";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export const FieldsTab = () => {
@@ -122,14 +123,7 @@ export const FieldsTab = () => {
         }
       />
 
-      {/* Results count */}
-      {!loading && (
-        <div className="flex items-center justify-between text-sm text-text-muted px-1">
-          <span>
-            Mostrando {filteredFields.length} de {fields.length} canchas
-          </span>
-        </div>
-      )}
+      {/* Results count was here, moved to PaginationFooter */}
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -138,16 +132,27 @@ export const FieldsTab = () => {
           ))}
         </div>
       ) : filteredFields.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredFields.map((field) => (
-            <FieldCard
-              key={field.field_id}
-              field={field}
-              onEdit={handleEdit}
-              onDelete={setDeleteId}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredFields.map((field) => (
+              <FieldCard
+                key={field.field_id}
+                field={field}
+                onEdit={handleEdit}
+                onDelete={setDeleteId}
+              />
+            ))}
+          </div>
+          <PaginationFooter
+            currentCount={filteredFields.length}
+            totalCount={fields.length}
+            itemName={fields.length !== 1 ? "canchas" : "cancha"}
+            page={1}
+            totalPages={1}
+            onChange={() => {}}
+            className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-6 border-t border-border/50"
+          />
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 bg-surface/50 border border-border border-dashed rounded-3xl">
           <div className="w-20 h-20 rounded-full bg-primary-soft flex items-center justify-center mb-4">

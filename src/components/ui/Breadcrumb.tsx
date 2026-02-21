@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { useUIStore } from "@/store/ui.store";
 
 // Mapeo de nombres de rutas
 const routeNameMap: Record<string, string> = {
@@ -56,6 +57,7 @@ interface BreadcrumbProps {
 export const Breadcrumb = ({ className }: BreadcrumbProps) => {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
+  const customBreadcrumbs = useUIStore((state) => state.customBreadcrumbs);
 
   // Filtrar segmentos que no deben mostrarse
   const visibleSegments = pathnames
@@ -65,6 +67,13 @@ export const Breadcrumb = ({ className }: BreadcrumbProps) => {
       path: buildPath(pathnames, index),
     }))
     .filter(({ segment }) => !shouldSkipSegment(segment));
+
+  const overrideSegments =
+    customBreadcrumbs ||
+    visibleSegments.map((s) => ({
+      label: formatSegment(s.segment),
+      path: s.path,
+    }));
 
   return (
     <nav
@@ -88,26 +97,26 @@ export const Breadcrumb = ({ className }: BreadcrumbProps) => {
         </li>
 
         {/* Separador después de Home si hay más elementos */}
-        {visibleSegments.length > 0 && (
+        {overrideSegments.length > 0 && (
           <li className="text-gray-400">
             <ChevronRight className="w-4 h-4" />
           </li>
         )}
 
-        {/* Segmentos visibles */}
-        {visibleSegments.map(({ segment, path }, index) => {
-          const isLast = index === visibleSegments.length - 1;
+        {/* Segmentos visibles o customizados */}
+        {overrideSegments.map(({ label, path }, index) => {
+          const isLast = index === overrideSegments.length - 1;
 
           return (
-            <li key={path} className="flex items-center gap-2">
-              {isLast ? (
+            <li key={path || label} className="flex items-center gap-2">
+              {isLast || !path ? (
                 <span className="font-medium text-primary cursor-default">
-                  {formatSegment(segment)}
+                  {label}
                 </span>
               ) : (
                 <>
                   <Link to={path} className="hover:text-primary">
-                    {formatSegment(segment)}
+                    {label}
                   </Link>
                   <ChevronRight className="w-4 h-4 text-gray-400" />
                 </>

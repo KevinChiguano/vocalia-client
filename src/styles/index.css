@@ -90,6 +90,13 @@
   --color-tournament: var(--gold-600);
   --color-tournament-hover: var(--gold-700);
   --color-tournament-soft: color-mix(in srgb, var(--gold-600) 10%, white);
+
+  /* Template Specific Colors */
+  --color-primary-brand: #e53734;
+  --color-background-light: #f8f6f6;
+  --color-background-dark: #171111;
+  --color-surface-dark: #261c1c;
+  --color-border-dark: #3d2e2e;
 }
 
 /* ===================== */

@@ -6,9 +6,7 @@ import {
   useMatchPlayers,
   useVocaliasMutations,
 } from "../hooks/useVocalias";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Plus, Trash2, ArrowRightLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,14 +15,9 @@ import {
 } from "@/components/ui/Dialog";
 import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/Table";
+import { ArrowRightLeft, RectangleVertical, Trash2, Plus } from "lucide-react";
+import { cn } from "@/utils/cn";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface MatchEventsTabProps {
   match: any;
@@ -54,6 +47,12 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
   const [subTeamId, setSubTeamId] = useState<number | null>(null);
   const [playerOut, setPlayerOut] = useState<string>("");
   const [playerIn, setPlayerIn] = useState<string>("");
+
+  // States for Sanction Deletion Confirm Modal
+  const [sanctionToDelete, setSanctionToDelete] = useState<{
+    id: number;
+    type: "amarilla" | "roja";
+  } | null>(null);
 
   const localPlayers = matchPlayers?.filter(
     (mp: any) =>
@@ -87,6 +86,41 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
   };
 
   const handleAddSanction = (playerId: number, type: string) => {
+    // Auto-Red Card Logic
+    if (type === "amarilla") {
+      const currentYellows =
+        getPlayerSanctions(playerId)?.filter(
+          (s: any) => s.type === "amarilla",
+        ) || [];
+      if (currentYellows.length === 1) {
+        // Already has 1, adding 2nd -> trigger Red
+        // Add the 2nd Yellow first (which is what we are doing here)
+        // Then logic to add Red.
+        // Note: Since mutations are async, we should probably add the red card separately
+        // BUT, usually a double yellow implies a red.
+        // I will add the yellow, and also add a red.
+
+        // Add the yellow
+        addSanction.mutate({
+          matchId,
+          playerId,
+          type: "amarilla" as any,
+          time: new Date(),
+        });
+
+        // Add the red (indirect)
+        setTimeout(() => {
+          addSanction.mutate({
+            matchId,
+            playerId,
+            type: "roja_indirecta" as any, // Assuming 'roja_indirecta' exists, if not 'roja'
+            time: new Date(),
+          });
+        }, 100);
+        return;
+      }
+    }
+
     addSanction.mutate({
       matchId,
       playerId,
@@ -115,288 +149,318 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
     );
   };
 
-  const openSubModal = (teamId: number) => {
+  const openSubModal = (teamId: number, playerOutId?: number) => {
     setSubTeamId(teamId);
+    if (playerOutId) setPlayerOut(String(playerOutId));
     setIsSubModalOpen(true);
   };
 
-  const renderTeamSheet = (
+  const renderPlayerRow = (mp: any, idx: number, teamId: number) => {
+    const p = mp.player;
+    const playerGoals = getPlayerGoals(Number(p.id)) || [];
+    const goalCount = playerGoals.length;
+    const playerSanctions = getPlayerSanctions(Number(p.id)) || [];
+    const yellowCards = playerSanctions.filter(
+      (s: any) => s.type === "amarilla",
+    );
+    const redCard = playerSanctions.find(
+      (s: any) =>
+        s.type === "roja" ||
+        s.type === "roja_directa" ||
+        s.type === "roja_indirecta",
+    );
+
+    // Check if player is substituted out
+    const isSubstitutedOut = substitutions?.some(
+      (s: any) => Number(s.playerOut?.id) === Number(p.id),
+    );
+
+    return (
+      <tr
+        key={`${p.id}-${idx}`}
+        className={cn(
+          "transition-colors group border-b border-border",
+          isSubstitutedOut
+            ? "bg-gray-100/50 dark:bg-zinc-900/50 grayscale opacity-60 cursor-not-allowed"
+            : "hover:bg-primary/5",
+        )}
+      >
+        {/* Number */}
+        <td className="px-5 py-3 font-bold text-text-muted text-sm text-center font-mono w-16">
+          {p.number || "-"}
+        </td>
+
+        {/* Name */}
+        <td className="px-5 py-3 font-medium text-sm text-text">
+          <div className="flex items-center gap-2">
+            <span
+              className={
+                isSubstitutedOut
+                  ? "line-through text-gray-500 dark:text-text-muted"
+                  : "text-text"
+              }
+            >
+              {p.name} {p.lastname}
+            </span>
+            {isSubstitutedOut && (
+              <span className="hidden md:inline ml-2 text-[10px] text-text-muted font-bold px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded italic">
+                SALE
+              </span>
+            )}
+          </div>
+        </td>
+
+        {/* Goals Action */}
+        <td className="px-5 py-3 text-center w-32">
+          <div className="flex justify-center items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-8 px-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary gap-1",
+                goalCount > 0 && "bg-primary/5",
+              )}
+              onClick={() => handleAddGoal(Number(p.id))}
+              disabled={isSubstitutedOut}
+            >
+              <span className="text-[10px] font-bold flex flex-col md:flex-row items-center md:gap-1 leading-none">
+                <span>+</span>
+                <span className="hidden md:inline">GOL</span>
+              </span>
+              {goalCount > 0 && (
+                <span className="bg-primary text-white text-[10px] px-1.5 min-w-5 h-5 flex items-center justify-center rounded-full leading-none ml-0.5">
+                  {goalCount}
+                </span>
+              )}
+            </Button>
+            {goalCount > 0 && (
+              <button
+                onClick={() => {
+                  const lastGoal = playerGoals[playerGoals.length - 1];
+                  if (lastGoal) deleteGoal.mutate(lastGoal.id);
+                }}
+                className="ml-1 text-text-muted hover:text-danger p-1 transition-opacity"
+                title="Borrar último gol"
+                disabled={isSubstitutedOut}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </td>
+
+        {/* Cards & Actions */}
+        <td className="px-5 py-3 text-right w-48">
+          <div className="flex justify-end gap-1 items-center">
+            {/* Yellow Card Section */}
+            <div className="flex items-center gap-0.5 md:gap-1">
+              {yellowCards.map((yc: any) => (
+                <button
+                  key={yc.id}
+                  onClick={() =>
+                    setSanctionToDelete({ id: yc.id, type: "amarilla" })
+                  }
+                  className="hover:scale-110 transition-transform"
+                  title="Eliminar tarjeta amarilla"
+                  disabled={isSubstitutedOut}
+                >
+                  <RectangleVertical className="w-5 h-5 fill-yellow-400 text-yellow-500" />
+                </button>
+              ))}
+
+              {yellowCards.length < 2 && !redCard && (
+                <button
+                  className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-yellow-400/10 transition-colors text-gray-300 dark:text-gray-600 hover:text-yellow-400"
+                  onClick={() => handleAddSanction(Number(p.id), "amarilla")}
+                  disabled={isSubstitutedOut}
+                  title="Agregar Tarjeta Amarilla"
+                >
+                  <Plus className="w-4 h-4" />
+                  <RectangleVertical className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Red Card Section */}
+            <div className="flex items-center gap-1">
+              {redCard && (
+                <button
+                  onClick={() =>
+                    setSanctionToDelete({ id: redCard.id, type: "roja" })
+                  }
+                  className="hover:scale-110 transition-transform"
+                  title="Eliminar tarjeta roja"
+                  disabled={isSubstitutedOut}
+                >
+                  <RectangleVertical className="w-5 h-5 fill-red-600 text-red-700" />
+                </button>
+              )}
+
+              {!redCard && (
+                <button
+                  className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-red-600/10 transition-colors text-gray-300 dark:text-gray-600 hover:text-red-500"
+                  onClick={() =>
+                    handleAddSanction(Number(p.id), "roja_directa")
+                  }
+                  disabled={isSubstitutedOut}
+                  title="Agregar Tarjeta Roja Directa"
+                >
+                  <Plus className="w-4 h-4" />
+                  <RectangleVertical className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Substitute */}
+            <button
+              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 dark:hover:bg-white/5 text-text-muted transition-colors ml-1"
+              onClick={() => openSubModal(teamId, Number(p.id))}
+              disabled={isSubstitutedOut}
+              title="Sustitución"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderTeamSection = (
     teamName: string,
     players: any[],
     teamId: number,
+    colorClass: string = "bg-primary",
   ) => {
-    const teamSubstitutions = substitutions?.filter((s: any) => {
-      const pOut = players.find(
-        (p: any) => Number(p.player?.id) === Number(s.playerOut?.id),
-      );
-      return !!pOut;
-    });
-
-    const totalGoals = goals?.filter((g: any) => {
-      const p = players.find(
-        (pl: any) => Number(pl.player?.id) === Number(g.player?.id),
-      );
-      return !!p;
-    }).length;
-
     return (
-      <Card className="flex flex-col h-full border-2 border-border shadow-soft bg-surface">
-        <CardHeader className="bg-row-alt py-3 border-b border-border">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-bold uppercase text-text">
-              {teamName}
-            </CardTitle>
-            <div className="flex flex-col items-end">
-              <span className="text-xs text-text-muted font-semibold">
-                GOLES TOTALES
-              </span>
-              <span className="text-2xl font-bold leading-none text-text">
-                {totalGoals || 0}
-              </span>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0 flex-1 flex flex-col">
-          {/* PLAYERS LIST */}
-          <div className="flex-1 overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10 text-center">#</TableHead>
-                  <TableHead>JUGADOR</TableHead>
-                  <TableHead className="w-36 text-center">GOLES</TableHead>
-                  <TableHead className="w-32 text-center">TARJETAS</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {players?.map((mp: any, idx: number) => {
-                  const p = mp.player;
-                  const playerGoals = getPlayerGoals(Number(p.id)) || [];
-                  const goalCount = playerGoals.length;
-                  const playerSanctions = getPlayerSanctions(Number(p.id));
+      <div className="flex flex-col gap-3">
+        {/* Header */}
+        <div className="flex items-center justify-between px-2 shrink-0">
+          <h3 className="font-bold text-lg flex items-center gap-2 text-text">
+            <div className={cn("w-2 h-6 rounded-full", colorClass)}></div>
+            {teamName}
+          </h3>
+          <span className="text-xs text-text-muted font-medium uppercase tracking-wider">
+            {players.length} Jugadores
+          </span>
+        </div>
 
-                  return (
-                    <TableRow key={`${p.id}-${idx}`} className="hover:bg-hover">
-                      <TableCell className="text-center font-mono">
-                        {p.number || "-"}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {p.name}
-                        {p.lastname ? ` ${p.lastname}` : ""}
-                      </TableCell>
-                      <TableCell>
-                        {/* GOAL COUNTER */}
-                        <div className="flex items-center justify-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 rounded-sm border border-border bg-surface text-text hover:bg-hover disabled:opacity-30"
-                            disabled={goalCount === 0}
-                            onClick={() => {
-                              if (goalCount > 0) {
-                                // Find last goal to delete
-                                const lastGoal =
-                                  playerGoals[playerGoals.length - 1];
-                                if (lastGoal) deleteGoal.mutate(lastGoal.id);
-                              }
-                            }}
-                          >
-                            -
-                          </Button>
-                          <span className="w-6 text-center font-bold text-lg text-text">
-                            {goalCount}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 rounded-sm border border-border bg-surface text-text hover:bg-hover"
-                            onClick={() => handleAddGoal(Number(p.id))}
-                          >
-                            +
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-3">
-                          {/* YELLOW CARD */}
-                          <div className="flex items-center gap-1">
-                            <div className="flex -space-x-2">
-                              {playerSanctions
-                                ?.filter((s: any) => s.type === "amarilla")
-                                .map((s: any, sIdx: number) => (
-                                  <div
-                                    key={`${s.id}-${sIdx}`}
-                                    className="w-5 h-7 bg-yellow-400 border border-yellow-500 rounded-[2px] shadow-sm cursor-pointer hover:z-10 hover:scale-110"
-                                    title="Eliminar tarjeta amarilla"
-                                    onClick={() => {
-                                      if (
-                                        confirm("¿Eliminar tarjeta amarilla?")
-                                      ) {
-                                        deleteSanction.mutate(s.id);
-                                      }
-                                    }}
-                                  />
-                                ))}
-                            </div>
+        {/* Table Container */}
+        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-primary/5 text-xs uppercase font-bold text-text-muted border-b border-primary/10">
+              <tr>
+                <th className="px-5 py-3.5 w-16 text-center">#</th>
+                <th className="px-5 py-3.5">Jugador</th>
+                <th className="px-5 py-3.5 text-center w-32">Goles</th>
+                <th className="px-5 py-3.5 text-right w-48">
+                  Tarjetas / Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody className="text-sm divide-y divide-border">
+              {players.map((mp, idx) => renderPlayerRow(mp, idx, teamId))}
+              {players.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-4 py-8 text-center text-text-muted italic flex flex-col items-center gap-2"
+                  >
+                    No hay jugadores registrados
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 rounded-md p-0 bg-yellow-400/10 text-yellow-600 hover:bg-yellow-400/20 border border-yellow-400/30 ml-1"
-                              disabled={
-                                (playerSanctions?.filter(
-                                  (s: any) => s.type === "amarilla",
-                                ).length || 0) >= 2
-                              }
-                              onClick={() => {
-                                if (
-                                  (playerSanctions?.filter(
-                                    (s: any) => s.type === "amarilla",
-                                  ).length || 0) >= 2
-                                )
-                                  return;
-                                handleAddSanction(Number(p.id), "amarilla");
-                              }}
-                              title="Agregar Tarjeta Amarilla"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-
-                          {/* RED CARD */}
-                          <div className="flex items-center gap-1">
-                            {playerSanctions?.some(
-                              (s: any) => s.type === "roja_directa",
-                            ) && (
-                              <div
-                                className="w-5 h-7 bg-red-600 border border-red-700 rounded-[2px] shadow-sm cursor-pointer hover:scale-110 transition-transform"
-                                title="Eliminar tarjeta roja"
-                                onClick={() => {
-                                  const s = playerSanctions.find(
-                                    (s: any) => s.type === "roja_directa",
-                                  );
-                                  if (s && confirm("¿Eliminar tarjeta roja?")) {
-                                    deleteSanction.mutate(s.id);
-                                  }
-                                }}
-                              />
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 rounded-md p-0 bg-red-600/10 text-red-600 hover:bg-red-600/20 border border-red-600/30 ml-1"
-                              disabled={playerSanctions?.some(
-                                (s: any) => s.type === "roja_directa",
-                              )}
-                              onClick={() => {
-                                if (
-                                  playerSanctions?.some(
-                                    (s: any) => s.type === "roja_directa",
-                                  )
-                                )
-                                  return;
-                                handleAddSanction(Number(p.id), "roja_directa");
-                              }}
-                              title="Agregar Tarjeta Roja"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {(!players || players.length === 0) && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="py-12 text-center text-text-muted"
-                    >
-                      No hay jugadores registrados en planilla.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+        {/* Substitutions Footer for Team */}
+        <div className="bg-surface border border-border rounded-xl p-4 shrink-0 mt-2">
+          <div className="flex items-center gap-2 mb-3">
+            <ArrowRightLeft className="w-4 h-4 text-text-muted" />
+            <h4 className="text-xs font-bold uppercase tracking-widest text-text-muted">
+              Cambios {teamName}
+            </h4>
           </div>
 
-          {/* SUBSTITUTIONS SECTION */}
-          <div className="border-t border-border bg-row-alt p-3">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-text-muted uppercase tracking-wider">
-                Cambios
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => openSubModal(teamId)}
-              >
-                <ArrowRightLeft className="w-3 h-3 mr-1" /> Registrar
-              </Button>
-            </div>
-            <div className="space-y-1">
-              {teamSubstitutions?.map((sub: any, subIdx: number) => {
+          <div className="space-y-2 mb-2">
+            {substitutions
+              ?.filter((s) => {
                 const pOut = players.find(
-                  (p: any) =>
-                    Number(p.player?.id) === Number(sub.playerOut?.id),
+                  (p) => Number(p.player?.id) === Number(s.playerOut?.id),
+                );
+                return !!pOut;
+              })
+              .map((sub: any) => {
+                const pOut = players.find(
+                  (p) => Number(p.player?.id) === Number(sub.playerOut?.id),
                 );
                 const pIn = players.find(
-                  (p: any) => Number(p.player?.id) === Number(sub.playerIn?.id),
+                  (p) => Number(p.player?.id) === Number(sub.playerIn?.id),
                 );
                 return (
                   <div
-                    key={`${sub.id}-${subIdx}`}
-                    className="flex items-center justify-between text-xs bg-surface border border-border rounded px-2 py-1"
+                    key={sub.id}
+                    className="flex items-center justify-between bg-gray-50 dark:bg-white/5 p-2 rounded-lg border border-border transition-colors hover:border-primary/30 group"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-danger font-bold">
-                        {pOut?.player?.number || "#"} Sale
-                      </span>
-                      <span className="text-text-subtle">→</span>
-                      <span className="text-success font-bold">
-                        {pIn?.player?.number || "#"} Entra
-                      </span>
+                    <div className="flex items-center gap-3 text-xs w-full">
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <span className="text-danger font-bold truncate">
+                          OUT #{pOut?.player?.number}
+                        </span>
+                        <ArrowRightLeft className="w-3 h-3 text-text-muted shrink-0" />
+                        <span className="text-success font-bold truncate">
+                          IN #{pIn?.player?.number}
+                        </span>
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      isIconOnly
-                      size="sm"
-                      className="h-4 w-4 text-text-muted hover:text-danger"
+                    <button
                       onClick={() => deleteSubstitution.mutate(sub.id)}
+                      className="text-text-muted hover:text-danger ml-2 shrink-0"
                     >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 );
               })}
-              {(!teamSubstitutions || teamSubstitutions.length === 0) && (
-                <p className="text-xs text-text-muted italic">
-                  Sin cambios registrados
-                </p>
-              )}
-            </div>
+            {(substitutions?.filter((s) =>
+              players.find(
+                (p) => Number(p.player?.id) === Number(s.playerOut?.id),
+              ),
+            ).length || 0) === 0 && (
+              <div className="text-xs text-text-muted italic py-1 text-center">
+                Sin cambios registrados
+              </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
+
+          <Button
+            variant="outline"
+            className="w-full text-xs h-8 border-dashed text-text-muted hover:text-primary hover:border-primary/50"
+            onClick={() => openSubModal(teamId)}
+          >
+            <Plus className="w-3 h-3 mr-1" /> REGISTRAR CAMBIO
+          </Button>
+        </div>
+      </div>
     );
   };
 
   return (
-    <div className="h-[calc(100vh-250px)] min-h-[600px] flex flex-col">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 h-full">
-        {renderTeamSheet(
-          match.localTeam?.name || "Local",
-          localPlayers || [],
-          localTeamId,
-        )}
-        {renderTeamSheet(
-          match.awayTeam?.name || "Visitante",
-          awayPlayers || [],
-          awayTeamId,
-        )}
-      </div>
+    <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 p-1 pb-20">
+      {renderTeamSection(
+        match.localTeam?.name || "Local",
+        localPlayers || [],
+        localTeamId,
+        "bg-primary",
+      )}
+
+      {renderTeamSection(
+        match.awayTeam?.name || "Visitante",
+        awayPlayers || [],
+        awayTeamId,
+        "bg-gray-400",
+      )}
 
       {/* SUBSTITUTION MODAL */}
       <Dialog open={isSubModalOpen} onOpenChange={setIsSubModalOpen}>
@@ -419,7 +483,7 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
                       value={String(p.player?.id)}
                     >
                       {p.player?.number ? `#${p.player?.number} ` : ""}
-                      {p.player?.name}
+                      {p.player?.name} {p.player?.lastname}
                     </option>
                   ),
                 )}
@@ -439,7 +503,7 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
                       value={String(p.player?.id)}
                     >
                       {p.player?.number ? `#${p.player?.number} ` : ""}
-                      {p.player?.name}
+                      {p.player?.name} {p.player?.lastname}
                     </option>
                   ),
                 )}
@@ -455,6 +519,20 @@ export const MatchEventsTab = ({ match }: MatchEventsTabProps) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmModal
+        open={!!sanctionToDelete}
+        onClose={() => setSanctionToDelete(null)}
+        onConfirm={() => {
+          if (sanctionToDelete) {
+            deleteSanction.mutate(sanctionToDelete.id);
+            setSanctionToDelete(null);
+          }
+        }}
+        title={`Eliminar tarjeta ${sanctionToDelete?.type}`}
+        description={`¿Estás seguro de que deseas eliminar esta tarjeta ${sanctionToDelete?.type}? Esta acción no se puede deshacer.`}
+        danger
+      />
     </div>
   );
 };

@@ -16,7 +16,7 @@ import { UserForm } from "../components/UserForm";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FiltersBar } from "@/components/ui/FiltersBar";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { LimitSelector } from "@/components/ui/LimitSelector";
 import { BaseTable } from "@/components/ui/Table";
 import { Badge } from "@/components/ui/Badge";
@@ -300,18 +300,15 @@ export const UsersPage = () => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-          <p className="text-sm text-text-muted">
-            Mostrando {users.length} de {meta.total} usuarios
-          </p>
-          {meta.totalPages > 1 && (
-            <Pagination
-              page={meta.page}
-              totalPages={meta.totalPages}
-              onChange={(page) => setFilters((prev) => ({ ...prev, page }))}
-            />
-          )}
-        </div>
+        <PaginationFooter
+          currentCount={users.length}
+          totalCount={meta.total}
+          itemName="usuarios"
+          page={meta.page}
+          totalPages={meta.totalPages}
+          onChange={(page) => setFilters((prev) => ({ ...prev, page }))}
+          className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-border/50"
+        />
       </div>
 
       <UserForm
