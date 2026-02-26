@@ -6,6 +6,7 @@ import {
   Users,
   Settings,
   ClipboardList,
+  Wallet,
 } from "lucide-react";
 
 import type { Permission } from "@/types/permissions";
@@ -52,6 +53,12 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     to: "/vocalias",
     icon: ClipboardList,
     permission: "vocalias.manage",
+  },
+  {
+    label: "Finanzas",
+    to: "/finance",
+    icon: Wallet,
+    // permission: "admin.only" o un permiso especifico si lo hay
   },
   {
     label: "Configuración",

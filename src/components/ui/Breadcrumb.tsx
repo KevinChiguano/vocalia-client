@@ -13,6 +13,8 @@ const routeNameMap: Record<string, string> = {
   teams: "Equipos",
   players: "Jugadores",
   matches: "Partidos",
+  "technical-commission": "Comisión Técnica",
+  "digital-vocalia": "Vocalia Digital",
   // Add more mappings as needed
 };
 

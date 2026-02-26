@@ -28,7 +28,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     return (
       <div className="w-full">
-        {label && <label className="ui-label mb-1 block">{label}</label>}
+        {label && (
+          <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">
+            {label}
+          </label>
+        )}
         <div className="relative">
           {leftIcon && (
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">

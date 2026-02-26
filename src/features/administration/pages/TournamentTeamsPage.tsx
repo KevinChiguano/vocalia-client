@@ -217,18 +217,20 @@ export const TournamentTeamsPage = () => {
         </div>
 
         {/* Delete Button */}
-        <Button
-          variant="danger"
-          size="xs"
-          isIconOnly
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRemove(rt.id);
-          }}
-          className="absolute top-3 right-3 rounded-2xl shadow-lg"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        {tournament?.isActive && (
+          <Button
+            variant="danger"
+            size="xs"
+            isIconOnly
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemove(rt.id);
+            }}
+            className="absolute top-3 right-3 rounded-2xl shadow-lg"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        )}
       </div>
     );
   };
@@ -256,93 +258,108 @@ export const TournamentTeamsPage = () => {
         {/* Left Side: Search and Inscribed */}
         <div className="lg:col-span-8 space-y-8">
           {/* Search Section */}
-          <Card className="border-primary/20 bg-primary/5 p-4 sm:p-6 rounded-2xl">
-            <h2 className="text-lg font-bold text-text mb-4 flex items-center gap-2">
-              <Plus className="w-5 h-5 text-primary" />
-              Inscribir Nuevo Equipo
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-              <div className="md:col-span-4 space-y-1.5">
-                <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">
-                  Categoría
-                </label>
-                <Select
-                  value={searchCategory}
-                  onChange={(e) => setSearchCategory(e.target.value)}
-                >
-                  <option value="">Todas las categorías</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="md:col-span-5 space-y-1.5">
-                <Label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">
-                  Nombre del Equipo
-                </Label>
-                <Input
-                  placeholder="Ej: Los Galácticos..."
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="rounded-xl"
-                />
-              </div>
-              <div className="md:col-span-3">
-                <Button
-                  onClick={handleSearch}
-                  className="w-full gap-2 rounded-xl h-[42px]"
-                >
-                  <Search className="w-4 h-4" />
-                  Buscar
-                </Button>
-              </div>
-            </div>
-
-            {/* Available Teams Search Results */}
-            {availableTeams.length > 0 && (
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2">
-                {availableTeams.map((team) => (
-                  <div
-                    key={team.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border shadow-sm hover:border-primary/30"
+          {tournament.isActive ? (
+            <Card className="border-primary/20 bg-primary/5 p-4 sm:p-6 rounded-2xl">
+              <h2 className="text-lg font-bold text-text mb-4 flex items-center gap-2">
+                <Plus className="w-5 h-5 text-primary" />
+                Inscribir Nuevo Equipo
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                <div className="md:col-span-4 space-y-1.5">
+                  <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">
+                    Categoría
+                  </label>
+                  <Select
+                    value={searchCategory}
+                    onChange={(e) => setSearchCategory(e.target.value)}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center text-primary font-bold overflow-hidden border border-primary/10">
-                        {team.logo ? (
-                          <img
-                            src={getImageUrl(team.logo)}
-                            alt={team.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Trophy className="w-5 h-5 opacity-30" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-text truncate max-w-[120px]">
-                          {team.name}
-                        </p>
-                        <p className="text-[10px] text-text-muted uppercase font-bold tracking-tight">
-                          {team.category?.name}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="primary"
-                      size="xs"
-                      onClick={() => handleRegister(team.id, team.categoryId)}
-                      className="rounded-lg"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
+                    <option value="">Todas las categorías</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="md:col-span-5 space-y-1.5">
+                  <Label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">
+                    Nombre del Equipo
+                  </Label>
+                  <Input
+                    placeholder="Ej: Los Galácticos..."
+                    value={searchName}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    className="rounded-xl"
+                  />
+                </div>
+                <div className="md:col-span-3">
+                  <Button
+                    onClick={handleSearch}
+                    className="w-full gap-2 rounded-xl h-[42px]"
+                  >
+                    <Search className="w-4 h-4" />
+                    Buscar
+                  </Button>
+                </div>
               </div>
-            )}
-          </Card>
+
+              {/* Available Teams Search Results */}
+              {availableTeams.length > 0 && (
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2">
+                  {availableTeams.map((team) => (
+                    <div
+                      key={team.id}
+                      className="flex items-center justify-between p-3 rounded-xl bg-surface border border-border shadow-sm hover:border-primary/30"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center text-primary font-bold overflow-hidden border border-primary/10">
+                          {team.logo ? (
+                            <img
+                              src={getImageUrl(team.logo)}
+                              alt={team.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Trophy className="w-5 h-5 opacity-30" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-text truncate max-w-[120px]">
+                            {team.name}
+                          </p>
+                          <p className="text-[10px] text-text-muted uppercase font-bold tracking-tight">
+                            {team.category?.name}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="primary"
+                        size="xs"
+                        onClick={() => handleRegister(team.id, team.categoryId)}
+                        className="rounded-lg"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          ) : (
+            <div className="py-10 px-6 sm:px-8 rounded-3xl bg-surface/50 backdrop-blur-sm border-2 border-dashed border-border shadow-sm flex flex-col items-center justify-center gap-3 text-center">
+              <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mb-2 ring-1 ring-primary/10">
+                <Trophy className="w-8 h-8 text-primary/40" />
+              </div>
+              <p className="text-lg text-text font-black uppercase tracking-wide">
+                Torneo Inactivo
+              </p>
+              <p className="text-sm text-text-muted mt-1 max-w-md mx-auto">
+                Este torneo se encuentra finalizado. La inscripción, eliminación
+                o modificación de equipos está totalmente deshabilitada.
+              </p>
+            </div>
+          )}
 
           {/* Registered Teams List with Tabs */}
           <div className="space-y-6">

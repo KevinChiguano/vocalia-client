@@ -50,16 +50,16 @@ const HomePage = () => {
       to: "/digital-vocalia",
     },
     {
-      title: "DISCIPLINA",
-      description: "Sanciones, revisión de informes y multas.",
+      title: "Reglamento",
+      description: "Gestión de reglas y artículos.",
       icon: Gavel,
-      to: "/discipline",
+      to: "/regulation",
     },
     {
       title: "FINANCIERO",
       description: "Cobro de vocalías, multas y reportes económicos.",
       icon: DollarSign,
-      to: "/financial",
+      to: "/finance",
     },
     {
       title: "ESTADÍSTICAS",
@@ -72,7 +72,12 @@ const HomePage = () => {
   return (
     <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PageHeader
-        title="Bienvenido al Sistema Integral de Administración Deportiva y Estadísticas de Campeonatos"
+        title={
+          <>
+            Sistema Integral de Administración Deportiva y Estadísticas de{" "}
+            <span className="text-primary">Campeonatos</span>
+          </>
+        }
         description="Selecciona un módulo para comenzar a trabajar."
         className="mb-8"
       />

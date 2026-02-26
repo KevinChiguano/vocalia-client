@@ -20,7 +20,7 @@ export const PaginationFooter = ({
   className = "mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50 pt-6",
 }: PaginationFooterProps) => {
   return (
-    <div className={className}>
+    <div>
       <p className="text-sm text-text-muted">
         Mostrando <span className="font-bold text-primary">{currentCount}</span>{" "}
         de

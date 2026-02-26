@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { StatisticsDashboard } from "../components/StatisticsDashboard";
 import { TournamentStats } from "../components/TournamentStats";
 import { statisticsApi } from "../api/statistics.api";
@@ -7,6 +6,7 @@ import { tournamentApi } from "@/features/administration/api/tournament.api";
 import { GlobalDashboardStats } from "../types/statistics.types";
 import { Tournament } from "@/features/administration/types/tournament.types";
 import { InlineSpinner } from "@/components/ui/InlineSpinner";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 
 const StatisticsPage = () => {
@@ -49,8 +49,30 @@ const StatisticsPage = () => {
   return (
     <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PageHeader
-        title="Estadísticas"
-        description="Resumen global y estadísticas detalladas por torneo."
+        title={
+          <>
+            Estadísticas del <span className="text-primary">Sistema</span>
+          </>
+        }
+        description="Resumen global y por torneo del desempeño deportivo en tiempo real."
+        actions={
+          <div className="w-full md:w-72">
+            <Select
+              label="Seleccionar Torneo"
+              value={selectedTournamentId ?? ""}
+              onChange={handleTournamentChange}
+            >
+              <option value="" disabled>
+                Seleccione un torneo
+              </option>
+              {tournaments.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        }
       />
 
       {loading ? (
@@ -62,24 +84,6 @@ const StatisticsPage = () => {
           {globalStats && <StatisticsDashboard stats={globalStats} />}
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-primary">
-                Estadísticas por Torneo
-              </h2>
-              <div className="w-64">
-                <Select
-                  value={selectedTournamentId ?? ""}
-                  onChange={handleTournamentChange}
-                >
-                  {tournaments.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
             {selectedTournamentId && (
               <TournamentStats tournamentId={selectedTournamentId} />
             )}

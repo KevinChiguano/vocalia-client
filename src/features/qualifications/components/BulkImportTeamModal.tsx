@@ -1,46 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Upload, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import logoDefault from "@/assets/logo_san_fernando.png";
-import { CreatePlayerDto } from "../types/player.types";
-import { playerApi } from "../api/player.api";
+import { CreateTeamDto } from "../types/team.types";
+import { teamApi } from "../api/team.api";
 import { useUIStore } from "@/store/ui.store";
+import { Category } from "../types/category.types";
+import { Select } from "@/components/ui/Select";
 
-interface BulkImportPlayerModalProps {
+interface BulkImportTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  teamId?: number;
+  categories: Category[];
   categoryId?: number;
 }
 
-export const BulkImportPlayerModal = ({
+export const BulkImportTeamModal = ({
   isOpen,
   onClose,
   onSuccess,
-  teamId,
+  categories,
   categoryId,
-}: BulkImportPlayerModalProps) => {
+}: BulkImportTeamModalProps) => {
   const { setNotification } = useUIStore();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [selectedTeam, setSelectedTeam] = useState<string>(
-    teamId ? String(teamId) : "",
-  );
   const [selectedCategory, setSelectedCategory] = useState<string>(
     categoryId ? String(categoryId) : "",
   );
-
-  // Sync props to state when modal opens or props change
-  useEffect(() => {
-    if (teamId) setSelectedTeam(String(teamId));
-    if (categoryId) setSelectedCategory(String(categoryId));
-  }, [teamId, categoryId, isOpen]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,8 +46,8 @@ export const BulkImportPlayerModal = ({
       const wb = XLSX.read(bstr, { type: "binary" });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws);
-      setData(data); // Preview data
+      const parsedData = XLSX.utils.sheet_to_json(ws);
+      setData(parsedData); // Preview data
     };
 
     reader.readAsBinaryString(file);
@@ -65,35 +58,29 @@ export const BulkImportPlayerModal = ({
     setError(null);
     try {
       // Map and validate
-      const playersToCreate: CreatePlayerDto[] = data.map((row: any) => ({
-        name: row.Nombre || row.name || row.nombres,
-        lastname: row.Apellido || row.lastname || row.apellidos,
-        dni: String(row.DNI || row.dni || row.cedula),
-        number: Number(row.Numero || row.number || row.dorsal) || undefined,
-        teamId: Number(selectedTeam) || Number(row.TeamId || row.team_id) || 0,
+      const teamsToCreate: CreateTeamDto[] = data.map((row: any) => ({
+        name: row.Nombre || row.name || row.nombre,
+        logo: row.Logo || row.logo || undefined,
         categoryId:
           Number(selectedCategory) ||
           (row.CategoryId || row.category_id
             ? Number(row.CategoryId || row.category_id)
-            : undefined),
-        // Add defaults or logic for missing IDs if context not provided
+            : 0),
       }));
 
       // Basic validation
-      const invalid = playersToCreate.filter(
-        (p) => !p.name || !p.dni || !p.teamId,
-      );
+      const invalid = teamsToCreate.filter((t) => !t.name || !t.categoryId);
 
       if (invalid.length > 0) {
         throw new Error(
-          `Hay ${invalid.length} filas inválidas. Asegúrate de tener DNI, Nombre y que el equipo esté seleccionado.`,
+          `Hay ${invalid.length} filas inválidas. Asegúrate de tener Nombre y Categoría.`,
         );
       }
 
-      await playerApi.bulkCreatePlayers(playersToCreate);
+      await teamApi.bulkCreateTeams(teamsToCreate);
       setNotification(
         "Éxito",
-        `${playersToCreate.length} jugadores importados correctamente.`,
+        `${teamsToCreate.length} equipos importados correctamente.`,
         "success",
       );
       onSuccess();
@@ -101,7 +88,7 @@ export const BulkImportPlayerModal = ({
       setData([]);
     } catch (e: any) {
       console.error(e);
-      setError(e.message || "Error al importar jugadores.");
+      setError(e.message || "Error al importar equipos.");
     } finally {
       setLoading(false);
     }
@@ -111,20 +98,19 @@ export const BulkImportPlayerModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Importar Jugadores Masivamente"
+      title="Importar Equipos Masivamente"
       maxWidth="3xl"
     >
       <div className="space-y-4 max-h-[80vh] overflow-y-auto p-1">
         <div className="border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center bg-surface">
           <Upload className="w-10 h-10 text-text-muted mb-2" />
           <p className="text-sm text-text-muted mb-2 text-center">
-            Sube un archivo Excel (.xlsx) con las columnas: Nombre, Apellido,
-            DNI, Numero
+            Sube un archivo Excel (.xlsx) con la columna: Nombre
           </p>
           <button
             onClick={async () => {
               const workbook = new ExcelJS.Workbook();
-              const worksheet = workbook.addWorksheet("Plantilla Jugadores", {
+              const worksheet = workbook.addWorksheet("Plantilla Equipos", {
                 views: [{ showGridLines: false }],
               });
 
@@ -156,13 +142,13 @@ export const BulkImportPlayerModal = ({
               }
 
               // 2. Add Titles
-              worksheet.mergeCells("B1:E1");
+              worksheet.mergeCells("B1:C1");
               const title1 = worksheet.getCell("B1");
               title1.value = "LIGA INDEPENDIENTE, SOCIAL Y CULTURAL";
               title1.font = { name: "Arial", bold: true, size: 16 };
               title1.alignment = { horizontal: "center", vertical: "middle" };
 
-              worksheet.mergeCells("B2:E2");
+              worksheet.mergeCells("B2:C2");
               const title2 = worksheet.getCell("B2");
               title2.value = '" SAN FERNANDO DE GUAMANI "';
               title2.font = {
@@ -174,9 +160,9 @@ export const BulkImportPlayerModal = ({
               };
               title2.alignment = { horizontal: "center", vertical: "middle" };
 
-              worksheet.mergeCells("B3:E3");
+              worksheet.mergeCells("B3:C3");
               const title3 = worksheet.getCell("B3");
-              title3.value = "PLANTILLA DE IMPORTACIÓN DE JUGADORES";
+              title3.value = "PLANTILLA DE IMPORTACIÓN DE EQUIPOS";
               title3.font = {
                 name: "Arial",
                 bold: true,
@@ -194,10 +180,8 @@ export const BulkImportPlayerModal = ({
               const headerRow = worksheet.getRow(5);
               headerRow.values = [
                 "",
-                "Nombre",
-                "Apellido",
-                "DNI / Cédula",
-                "Número (Dorsal)",
+                "Nombre del Equipo",
+                "URL Logo (Opcional)",
               ];
               headerRow.height = 20;
 
@@ -219,13 +203,13 @@ export const BulkImportPlayerModal = ({
 
               // Add sample rows
               const sampleRow1 = worksheet.getRow(6);
-              sampleRow1.values = ["", "Juan", "Perez", "1234567890", 10];
+              sampleRow1.values = ["", "Equipo Ejemplo", ""];
               const sampleRow2 = worksheet.getRow(7);
-              sampleRow2.values = ["", "Carlos", "Mendez", "0987654321", 7];
+              sampleRow2.values = ["", "FC Barcelona", ""];
 
               [sampleRow1, sampleRow2].forEach((row) => {
                 row.eachCell((cell: any) => {
-                  cell.alignment = { horizontal: "center", vertical: "middle" };
+                  cell.alignment = { horizontal: "left", vertical: "middle" };
                   cell.border = {
                     top: { style: "thin", color: { argb: "FFCCCCCC" } },
                     left: { style: "thin", color: { argb: "FFCCCCCC" } },
@@ -235,13 +219,7 @@ export const BulkImportPlayerModal = ({
                 });
               });
 
-              worksheet.columns = [
-                { width: 14 }, // Spacer
-                { width: 25 }, // Nombre
-                { width: 25 }, // Apellido
-                { width: 20 }, // DNI
-                { width: 18 }, // Numero
-              ];
+              worksheet.columns = [{ width: 14 }, { width: 40 }, { width: 40 }];
 
               // Generate and save
               const buffer = await workbook.xlsx.writeBuffer();
@@ -251,7 +229,7 @@ export const BulkImportPlayerModal = ({
               const url = window.URL.createObjectURL(blob);
               const a = document.createElement("a");
               a.href = url;
-              a.download = "plantilla_jugadores.xlsx";
+              a.download = "plantilla_equipos.xlsx";
               a.click();
               window.URL.revokeObjectURL(url);
             }}
@@ -259,6 +237,24 @@ export const BulkImportPlayerModal = ({
           >
             Descargar plantilla de ejemplo
           </button>
+
+          <div className="w-full max-w-sm mb-4">
+            <Select
+              label="Categoría (Requerido)"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              error={
+                !selectedCategory && data.length > 0 ? "Requerido" : undefined
+              }
+            >
+              <option value="">Seleccionar Categoría</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </Select>
+          </div>
 
           <input
             type="file"
@@ -287,33 +283,15 @@ export const BulkImportPlayerModal = ({
               <thead className="bg-surface">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    DNI
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
                     Nombre
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Apellido
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">
-                    Numero
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-bg divide-y divide-border">
                 {data.slice(0, 5).map((row, i) => (
                   <tr key={i} className="hover:bg-surface/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted">
-                      {row.DNI || row.dni || row.cedula}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
-                      {row.Nombre || row.name || row.nombres}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted">
-                      {row.Apellido || row.lastname || row.apellidos}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted">
-                      {row.Numero || row.number || row.dorsal}
+                      {row.Nombre || row.name || row.nombre}
                     </td>
                   </tr>
                 ))}
@@ -329,7 +307,10 @@ export const BulkImportPlayerModal = ({
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={processData} disabled={loading || data.length === 0}>
+          <Button
+            onClick={processData}
+            disabled={loading || data.length === 0 || !selectedCategory}
+          >
             {loading ? "Importando..." : "Importar Datos"}
           </Button>
         </div>

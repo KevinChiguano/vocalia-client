@@ -179,6 +179,115 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
     }));
   }, [days, vocals]);
 
+  const handleGenerateFixture = () => {
+    if (!tournamentId) {
+      setNotification("Atención", "Selecciona un torneo primero", "error");
+      return;
+    }
+
+    // Get categories to process (either selected ones or all)
+    const catsToProcess =
+      filteredCategories.length > 0 ? filteredCategories : allCategories;
+    const newMatches: any[] = [];
+
+    let startTime = new Date();
+    startTime.setHours(8, 0, 0, 0); // Start at 8:00 AM
+
+    catsToProcess.forEach((cat) => {
+      // Get teams for this category
+      const catTeams = allTeams.filter(
+        (t: any) => Number(t.categoryId) === Number(cat.id),
+      );
+      if (catTeams.length < 2) return; // Not enough teams
+
+      // Shuffle teams (optional, but good for fairness if not seeded)
+      // For a strict round-robin, we keep the order and just rotate based on 'fecha'
+      const teams = [...catTeams];
+
+      // If odd number of teams, add a dummy "BYE" team
+      if (teams.length % 2 !== 0) {
+        teams.push({
+          id: -1,
+          name: "DESCANSA",
+          categoryId: Number(cat.id),
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as any);
+      }
+
+      const numTeams = teams.length;
+      const numRounds = numTeams - 1;
+      const roundIndex = (fecha - 1) % numRounds; // 0-indexed round based on current fecha
+
+      // Generate pairings for the current round
+      for (let i = 0; i < numTeams / 2; i++) {
+        // Round-robin pairing calculation
+        const homeIdx = (roundIndex + i) % (numTeams - 1);
+        let awayIdx = (numTeams - 1 - i + roundIndex) % (numTeams - 1);
+
+        // The last team stays fixed in position 0
+        if (i === 0) {
+          awayIdx = numTeams - 1;
+        }
+
+        const homeTeam = teams[homeIdx];
+        const awayTeam = teams[awayIdx];
+
+        // Skip if someone is resting
+        if (homeTeam.id === -1 || awayTeam.id === -1) continue;
+
+        const hours = startTime.getHours().toString().padStart(2, "0");
+        const mins = startTime.getMinutes().toString().padStart(2, "0");
+
+        newMatches.push({
+          time: `${hours}:${mins}`,
+          localTeamId: Number(homeTeam.id),
+          awayTeamId: Number(awayTeam.id),
+          category: cat.name,
+          vocalUserId: 0,
+          fieldId: 0,
+        });
+
+        // Increment time by 1.5 hours (90 mins) for the next match
+        startTime.setMinutes(startTime.getMinutes() + 90);
+      }
+    });
+
+    if (newMatches.length === 0) {
+      setNotification(
+        "Aviso",
+        "No hay suficientes equipos para autocompletar.",
+        "info",
+      );
+      return;
+    }
+
+    // Assign to the first day (or create one if empty)
+    const currentDays = [...days];
+    if (currentDays.length > 0) {
+      currentDays[0] = {
+        ...currentDays[0],
+        matches: [...currentDays[0].matches, ...newMatches],
+      };
+      setDays(currentDays);
+    } else {
+      setDays([
+        {
+          id: `day-${Date.now()}`,
+          date: new Date().toISOString().split("T")[0],
+          matches: newMatches,
+        },
+      ]);
+    }
+
+    setNotification(
+      "Éxito",
+      `Fixture autocompletado para la fecha ${fecha}.`,
+      "success",
+    );
+  };
+
   const handleSave = async () => {
     if (!tournamentId) {
       setNotification("Atención", "Selecciona un torneo primero", "error");
@@ -429,6 +538,7 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
             onChangeFecha={setFecha}
             vuelta={vuelta}
             onChangeVuelta={setVuelta}
+            onGenerateFixture={handleGenerateFixture}
           />
 
           {/* Day Sections */}

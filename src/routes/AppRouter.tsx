@@ -17,6 +17,8 @@ import { TechnicalCommissionPage } from "@/features/technical-commission/pages/T
 import DigitalVocaliaPage from "@/features/digital-vocalia/pages/DigitalVocaliaPage";
 import MatchControlPage from "@/features/digital-vocalia/pages/MatchControlPage";
 import StatisticsPage from "@/features/statistics/pages/StatisticsPage";
+import FinancePage from "@/features/finance/pages/FinancePage";
+import RegulationPage from "@/features/regulation/pages/RegulationPage";
 
 export const router = createBrowserRouter([
   // ================= AUTH =================
@@ -104,10 +106,28 @@ export const router = createBrowserRouter([
             ],
           },
 
+          // ---------- REGLAMENTO (todos) ----------
+          {
+            path: "regulation",
+            element: <RegulationPage />,
+          },
+
           // ---------- ESTADÍSTICAS (todos) ----------
           {
             path: "statistics",
             element: <StatisticsPage />,
+          },
+
+          // ---------- FINANCE (ADMIN) ----------
+          {
+            path: "finance",
+            element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
+            children: [
+              {
+                index: true,
+                element: <FinancePage />,
+              },
+            ],
           },
         ],
       },

@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { GlobalDashboardStats } from "../types/statistics.types";
-import { Trophy, Users, Calendar, Goal, CreditCard, Shirt } from "lucide-react";
+import { Trophy, Users, UserSquare2, Activity, BarChart3 } from "lucide-react";
+import { Card } from "@/components/ui/Card";
 
 interface Props {
   stats: GlobalDashboardStats;
@@ -9,75 +9,81 @@ interface Props {
 export const StatisticsDashboard = ({ stats }: Props) => {
   const { counts } = stats;
 
-  const items = [
-    {
-      label: "Torneos",
-      value: counts.tournaments,
-      icon: Trophy,
-      color: "text-yellow-600",
-      bg: "bg-yellow-100 dark:bg-yellow-900/20",
-    },
-    {
-      label: "Equipos",
-      value: counts.teams,
-      icon: Shirt,
-      color: "text-blue-600",
-      bg: "bg-blue-100 dark:bg-blue-900/20",
-    },
-    {
-      label: "Jugadores",
-      value: counts.players,
-      icon: Users,
-      color: "text-green-600",
-      bg: "bg-green-100 dark:bg-green-900/20",
-    },
-    {
-      label: "Partidos",
-      value: counts.matches,
-      icon: Calendar,
-      color: "text-purple-600",
-      bg: "bg-purple-100 dark:bg-purple-900/20",
-    },
-    {
-      label: "Goles",
-      value: counts.goals,
-      icon: Goal,
-      color: "text-orange-600",
-      bg: "bg-orange-100 dark:bg-orange-900/20",
-    },
-    {
-      label: "Tarj. Amarillas",
-      value: counts.yellowCards,
-      icon: CreditCard,
-      color: "text-yellow-500",
-      bg: "bg-yellow-50 dark:bg-yellow-900/10",
-    },
-    {
-      label: "Tarj. Rojas",
-      value: counts.redCards,
-      icon: CreditCard,
-      color: "text-red-500",
-      bg: "bg-red-50 dark:bg-red-900/10",
-    },
-  ];
-
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-      {items.map((item) => (
-        <Card key={item.label}>
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className={`p-3 rounded-full ${item.bg}`}>
-              <item.icon className={`w-6 h-6 ${item.color}`} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                {item.label}
-              </p>
-              <h3 className="text-2xl font-bold">{item.value}</h3>
-            </div>
-          </CardContent>
+    <section className="flex flex-col gap-4">
+      <h2 className="text-text text-xl font-bold flex items-center gap-2">
+        <Activity className="size-6 text-primary" />
+        Estadísticas Generales
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Total Torneos */}
+        <Card className="p-5 flex flex-col gap-3">
+          <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <Trophy className="size-6" />
+          </div>
+          <div>
+            <p className="text-text-muted text-xs font-semibold uppercase tracking-wider">
+              Total Torneos
+            </p>
+            <p className="text-2xl font-bold text-text">{counts.tournaments}</p>
+          </div>
         </Card>
-      ))}
-    </div>
+
+        {/* Equipos Inscritos */}
+        <Card className="p-5 flex flex-col gap-3">
+          <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <Users className="size-6" />
+          </div>
+          <div>
+            <p className="text-text-muted text-xs font-semibold uppercase tracking-wider">
+              Equipos
+            </p>
+            <p className="text-2xl font-bold text-text">{counts.teams}</p>
+          </div>
+        </Card>
+
+        {/* Jugadores */}
+        <Card className="p-5 flex flex-col gap-3">
+          <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <UserSquare2 className="size-6" />
+          </div>
+          <div>
+            <p className="text-text-muted text-xs font-semibold uppercase tracking-wider">
+              Federados
+            </p>
+            <p className="text-2xl font-bold text-text">{counts.players}</p>
+          </div>
+        </Card>
+
+        {/* Goles */}
+        <Card className="p-5 flex flex-col gap-3">
+          <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <BarChart3 className="size-6" />
+          </div>
+          <div>
+            <p className="text-text-muted text-xs font-semibold uppercase tracking-wider">
+              Goles Totales
+            </p>
+            <p className="text-2xl font-bold text-text">{counts.goals}</p>
+          </div>
+        </Card>
+
+        {/* Sanciones */}
+        <Card className="p-5 flex flex-col gap-3">
+          <div className="flex gap-2">
+            <div className="h-10 w-4 bg-yellow-400 rounded-sm"></div>
+            <div className="h-10 w-4 bg-red-600 rounded-sm"></div>
+          </div>
+          <div>
+            <p className="text-text-muted text-xs font-semibold uppercase tracking-wider">
+              Amarillas/Rojas
+            </p>
+            <p className="text-2xl font-bold text-text">
+              {counts.yellowCards} / {counts.redCards}
+            </p>
+          </div>
+        </Card>
+      </div>
+    </section>
   );
 };

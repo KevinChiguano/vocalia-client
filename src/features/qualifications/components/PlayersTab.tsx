@@ -254,12 +254,12 @@ export const PlayersTab = () => {
       <PageHeader
         title={
           <span className="flex items-center gap-4">
-            <span className="w-14 h-14 rounded-xl bg-linear-to-br from-primary to-red-900 p-2.5 flex items-center justify-center shadow-lg shadow-primary/20 overflow-hidden shrink-0">
+            <span className="w-14 h-14 rounded-xl">
               {activeTeam?.logo ? (
                 <img
                   src={activeTeam.logo}
                   alt="Logo"
-                  className="w-full h-full object-contain drop-shadow"
+                  className="w-full h-full object-contain"
                 />
               ) : (
                 <Shield className="text-white w-8 h-8" />
@@ -506,7 +506,7 @@ export const PlayersTab = () => {
                 onChange={(page) =>
                   setPagination((prev) => ({ ...prev, page }))
                 }
-                className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2"
+                className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-border/50 pt-6 gap-4"
               />
             </>
           ) : (
@@ -554,8 +554,6 @@ export const PlayersTab = () => {
             onSuccess={() => fetchData()}
             teamId={activeTeam.id}
             categoryId={activeTeam.categoryId || undefined}
-            teams={[activeTeam]}
-            categories={categories}
           />
         )}
       </div>
