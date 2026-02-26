@@ -15,7 +15,6 @@ import { Team } from "../types/team.types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { Select } from "@/components/ui/Select";
 import { Category } from "../types/category.types";
 import { formatDateForInput } from "@/utils/dateUtils";
 import { Modal } from "@/components/ui/Modal";
@@ -107,7 +106,11 @@ export const PlayerForm = ({
         teamId: initialData?.teamId || (teams.length > 0 ? teams[0].id : 0),
         categoryId:
           initialData?.categoryId ||
-          (categories.length > 0 ? categories[0].id : 0),
+          (teams.length > 0 && teams[0].categoryId
+            ? teams[0].categoryId
+            : categories.length > 0
+              ? categories[0].id
+              : 0),
         birthDate: formatDateForInput(initialData?.birthDate),
         imageUrl: initialData?.imageUrl || "",
         isActive: initialData?.isActive ?? true,
@@ -245,43 +248,11 @@ export const PlayerForm = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Select
-              label="Categoría (Obligatorio)"
-              id="categoryId"
-              error={errors.categoryId?.message}
-              {...register("categoryId", { valueAsNumber: true })}
-            >
-              <option value={0} disabled>
-                Selecciona una categoría
-              </option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Select
-              label="Equipo (Obligatorio)"
-              id="teamId"
-              error={errors.teamId?.message}
-              {...register("teamId", { valueAsNumber: true })}
-            >
-              <option value={0} disabled>
-                Selecciona un equipo
-              </option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-        </div>
+        <input type="hidden" {...register("teamId", { valueAsNumber: true })} />
+        <input
+          type="hidden"
+          {...register("categoryId", { valueAsNumber: true })}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">

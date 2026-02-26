@@ -173,7 +173,9 @@ export const TournamentsPage = () => {
 
       {/* Results count removed from top, handled by PaginationFooter directly */}
       {/* Content */}
-      {Array.isArray(tournaments) && tournaments.length > 0 ? (
+      {(Array.isArray(tournaments) && tournaments.length > 0) ||
+      filters.search ||
+      filters.active !== undefined ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {tournaments.map((tournament) => (
@@ -185,6 +187,21 @@ export const TournamentsPage = () => {
                 onManageTeams={handleManageTeams}
               />
             ))}
+            {/* Add New Card Placeholder */}
+            <button
+              onClick={handleCreate}
+              className="group flex flex-col items-center justify-center p-8 bg-surface/50 border-2 border-dashed border-border rounded-2xl hover:border-primary/50 hover:bg-primary/5 transition-all min-h-[300px] h-full"
+            >
+              <div className="w-14 h-14 rounded-full bg-elevated flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-all shadow-soft group-hover:shadow-primary/20">
+                <Plus className="w-8 h-8" />
+              </div>
+              <span className="font-bold text-text-muted group-hover:text-primary transition-colors text-lg">
+                Nuevo Torneo
+              </span>
+              <p className="text-sm text-text-muted mt-2 text-center max-w-[200px]">
+                Configura un nuevo torneo para la liga
+              </p>
+            </button>
           </div>
 
           {/* Pagination */}

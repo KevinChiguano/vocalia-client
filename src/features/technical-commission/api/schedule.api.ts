@@ -26,10 +26,11 @@ export const scheduleApi = {
   createMatch: async (data: {
     tournamentId: number;
     stage: string;
+    matchDay: number;
     matchDate: string;
     localTeamId: number;
     awayTeamId: number;
-    categoryId?: number;
+    category?: string;
     vocalUserId?: number;
     fieldId?: number;
   }) => {

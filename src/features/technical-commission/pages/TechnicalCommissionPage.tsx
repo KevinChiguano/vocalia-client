@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { FieldsTab } from "../components/FieldsTab";
 import { ScheduleManagementTab } from "../components/ScheduleManagementTab";
+import { ScheduleTab } from "../components/ScheduleTab";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CustomTabs } from "@/components/ui/CustomTabs";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, MapPin, FileSpreadsheet } from "lucide-react";
+import { useTournaments } from "@/features/administration/hooks/useTournaments";
 
-type TabKey = "matches" | "fields";
+type TabKey = "matches" | "fields" | "schedule";
 
 export const TechnicalCommissionPage = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("fields");
+  const { data: tournamentsQuery } = useTournaments({ active: true });
+  const tournaments = tournamentsQuery?.data || [];
 
   return (
     <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -38,13 +42,21 @@ export const TechnicalCommissionPage = () => {
               label: "Gestión de Partidos",
               icon: <CalendarDays className="w-4 h-4" />,
             },
+            {
+              key: "schedule",
+              label: "Hoja de Programación",
+              icon: <FileSpreadsheet className="w-4 h-4" />,
+            },
           ]}
         />
       </div>
 
       <div className="animate-in fade-in duration-500 slide-in-from-bottom-2">
+        {activeTab === "matches" && (
+          <ScheduleManagementTab tournaments={tournaments} />
+        )}
+        {activeTab === "schedule" && <ScheduleTab />}
         {activeTab === "fields" && <FieldsTab />}
-        {activeTab === "matches" && <ScheduleManagementTab />}
       </div>
     </div>
   );

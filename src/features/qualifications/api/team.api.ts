@@ -31,6 +31,13 @@ export const teamApi = {
     return data.data;
   },
 
+  bulkCreateTeams: async (
+    teams: CreateTeamDto[],
+  ): Promise<{ count: number }> => {
+    const { data } = await api.post("/teams/bulk", teams);
+    return data.data;
+  },
+
   updateTeam: async (id: number, team: UpdateTeamDto): Promise<Team> => {
     const { data } = await api.put(`/teams/${id}`, team);
     return data.data;

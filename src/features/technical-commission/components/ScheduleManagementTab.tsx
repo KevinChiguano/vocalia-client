@@ -24,40 +24,43 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Input } from "@/components/ui/Input";
 import { useUIStore } from "@/store/ui.store";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
+import { SchedulePrintTemplate } from "./SchedulePrintTemplate";
+import logoDefault from "@/assets/logo_san_fernando.png";
 
 type ViewMode = "day" | "week" | "month";
 
 interface Match {
   id: number;
   date: string;
-  field?: { name: string };
-  category?: { name: string };
-  localTeam?: { name: string };
-  awayTeam?: { name: string };
-  vocal?: { name: string };
+  field?: { id?: number; field_id?: number; name: string };
+  category?: string;
+  localTeam?: { id?: number; team_id?: number; name: string };
+  awayTeam?: { id?: number; team_id?: number; name: string };
+  vocal?: { id?: number; user_id?: number; name: string };
+  stage?: string;
+  matchDay?: number;
 }
 
 interface Props {
   tournaments?: any[];
-  onCreate?: () => void;
   onRefresh?: () => void;
 }
 
 export const ScheduleManagementTab = ({
   tournaments = [],
-  onCreate,
   onRefresh,
 }: Props) => {
   const { setNotification } = useUIStore();
-  // --- Global State ---
   const [tournamentId, setTournamentId] = useState<number>(0);
-  const [stage, setStage] = useState("Fase de Grupos");
+  const [filterStage, setFilterStage] = useState("");
+  const [filterMatchDay, setFilterMatchDay] = useState<number | "">("");
 
   // --- View & Filter State ---
-  const [viewMode, setViewMode] = useState<ViewMode>("day");
+  const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // --- Data State ---
@@ -67,18 +70,25 @@ export const ScheduleManagementTab = ({
   // --- Modal State ---
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isMassGenOpen, setIsMassGenOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState<"pdf" | "excel" | false>(
+    false,
+  );
 
   // --- Form State ---
+  const [editingMatchId, setEditingMatchId] = useState<number | null>(null);
   const [categoryId, setCategoryId] = useState<number>(0);
   const [localTeamId, setLocalTeamId] = useState<number>(0);
   const [awayTeamId, setAwayTeamId] = useState<number>(0);
   const [vocalIds, setVocalIds] = useState<number[]>([]);
-  const [fieldId, setFieldId] = useState<number>(0);
+  const [fieldId, setFieldId] = useState<number | string>(0);
   const [matchDate, setMatchDate] = useState("");
   const [matchTime, setMatchTime] = useState("");
+  const [formMatchDay, setFormMatchDay] = useState<number>(1);
+  const [formStage, setFormStage] = useState("");
 
   // --- Refs ---
   const tableRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   // --- Options Data ---
   const { data: categoriesData } = useCategories({ active: true });
@@ -99,6 +109,12 @@ export const ScheduleManagementTab = ({
   const { data: fieldsData } = useFields();
   const fields = fieldsData || [];
 
+  const getTeamLogo = (teamId?: number) => {
+    if (!teamId) return null;
+    const team = teams.find((t: any) => (t.id || t.team_id) === teamId);
+    return team?.logo || null;
+  };
+
   // --- Effects ---
   useEffect(() => {
     if (tournaments.length > 0 && !tournamentId) {
@@ -108,7 +124,7 @@ export const ScheduleManagementTab = ({
 
   useEffect(() => {
     fetchMatches();
-  }, [tournamentId, currentDate, viewMode]);
+  }, [tournamentId, currentDate, viewMode, filterMatchDay, filterStage]);
 
   useEffect(() => {
     // Reset team selections when category changes
@@ -117,6 +133,64 @@ export const ScheduleManagementTab = ({
   }, [categoryId]);
 
   // --- Helpers ---
+  const daysForPrint = useMemo(() => {
+    const datesMap = new Map<string, any[]>();
+
+    matches.forEach((m) => {
+      if (!m.date) return;
+      const d = new Date(m.date);
+      if (isNaN(d.getTime())) return;
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mins = String(d.getMinutes()).padStart(2, "0");
+      const timeStr = `${hh}:${mins}`;
+
+      if (!datesMap.has(dateStr)) {
+        datesMap.set(dateStr, []);
+      }
+
+      datesMap.get(dateStr)!.push({
+        time: timeStr,
+        localTeamId: m.localTeam?.id || m.localTeam?.team_id || 0,
+        awayTeamId: m.awayTeam?.id || m.awayTeam?.team_id || 0,
+        category: m.category || "General",
+        vocalUserId: m.vocal?.id || m.vocal?.user_id || 0,
+        fieldId: m.field?.id || m.field?.field_id || 0,
+      });
+    });
+
+    return Array.from(datesMap.entries()).map(([date, dayMatches]) => ({
+      id: `day-${date}`,
+      date,
+      matches: dayMatches,
+    }));
+  }, [matches]);
+
+  const assignedVocalsSummaryForPrint = useMemo(() => {
+    const counts = new Map<number, { count: number; name: string }>();
+    matches.forEach((m) => {
+      const vid = m.vocal?.id || m.vocal?.user_id;
+      if (vid) {
+        const vName = m.vocal?.name || "Vocal Desconocido";
+        const current = counts.get(Number(vid)) || { count: 0, name: vName };
+        counts.set(Number(vid), {
+          count: current.count + 1,
+          name: current.name,
+        });
+      }
+    });
+    return Array.from(counts.entries()).map(([userId, info]) => ({
+      userId,
+      count: info.count,
+      userName: info.name,
+    }));
+  }, [matches]);
+
   const getDateRange = () => {
     const start = new Date(currentDate);
     const end = new Date(currentDate);
@@ -154,6 +228,8 @@ export const ScheduleManagementTab = ({
     try {
       const result = await scheduleApi.getMatches({
         tournamentId: tournamentId || undefined,
+        matchDay: filterMatchDay || undefined,
+        stage: filterStage || undefined,
         matchDateFrom: start.toISOString(),
         matchDateTo: end.toISOString(),
         limit: 100,
@@ -180,6 +256,55 @@ export const ScheduleManagementTab = ({
   };
 
   // --- Handlers ---
+  const resetForm = () => {
+    setEditingMatchId(null);
+    setCategoryId(0);
+    setLocalTeamId(0);
+    setAwayTeamId(0);
+    setVocalIds([]);
+    setFieldId(0);
+    setMatchDate("");
+    setMatchTime("");
+    setFormMatchDay(1);
+    setFormStage("");
+  };
+
+  const handleEditMatch = (match: Match) => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    setEditingMatchId(match.id);
+    setFormStage(match.stage || "Etapa Clasificatoria");
+    setFormMatchDay(match.matchDay || 1);
+
+    const cat = categories.find((c: any) => c.name === match.category);
+    setCategoryId(cat ? Number(cat.id) : 0);
+
+    setLocalTeamId(
+      Number(match.localTeam?.id || match.localTeam?.team_id || 0),
+    );
+    setAwayTeamId(Number(match.awayTeam?.id || match.awayTeam?.team_id || 0));
+    setFieldId(match.field?.id || match.field?.field_id || 0);
+    setVocalIds(
+      match.vocal?.id || match.vocal?.user_id
+        ? [Number(match.vocal.id || match.vocal.user_id)]
+        : [],
+    );
+
+    if (match.date) {
+      const d = new Date(match.date);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        setMatchDate(`${yyyy}-${mm}-${dd}`);
+
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mins = String(d.getMinutes()).padStart(2, "0");
+        setMatchTime(`${hh}:${mins}`);
+      }
+    }
+  };
+
   const handleCreateMatch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
@@ -201,21 +326,45 @@ export const ScheduleManagementTab = ({
       // Create valid ISO string
       const matchDateTime = new Date(`${matchDate}T${matchTime}`);
 
-      await scheduleApi.createMatch({
+      const categoryObj = categories.find(
+        (c: any) => Number(c.id || c.category_id) === Number(categoryId),
+      );
+
+      const payload = {
         tournamentId,
-        stage,
+        stage: formStage,
+        matchDay: formMatchDay,
         matchDate: matchDateTime.toISOString(), // Fix for Prisma Invalid value
         localTeamId,
         awayTeamId,
-        categoryId: categoryId || undefined,
-        vocalUserId: vocalIds[0] || undefined,
-        fieldId: fieldId || undefined,
-      });
-      setNotification("Éxito", "Partido programado con éxito", "success");
+        category: categoryObj ? categoryObj.name : undefined,
+        vocalUserId:
+          vocalIds[0] && Number(vocalIds[0]) > 0
+            ? Number(vocalIds[0])
+            : undefined,
+        fieldId: fieldId && Number(fieldId) > 0 ? Number(fieldId) : undefined,
+      };
+
+      if (editingMatchId) {
+        await scheduleApi.updateMatch(editingMatchId, payload);
+        setNotification("Éxito", "Partido actualizado con éxito", "success");
+      } else {
+        await scheduleApi.createMatch(payload);
+        setNotification("Éxito", "Partido programado con éxito", "success");
+      }
+
+      resetForm();
       onRefresh?.();
-    } catch (error) {
+      fetchMatches();
+    } catch (error: any) {
       console.error(error);
-      setNotification("Error", "Error al programar el partido", "error");
+      const backendMsg =
+        error.response?.data?.message || error.response?.data || error.message;
+      setNotification(
+        "Error",
+        "Error al programar el partido: " + JSON.stringify(backendMsg),
+        "error",
+      );
     }
   };
 
@@ -232,42 +381,208 @@ export const ScheduleManagementTab = ({
   };
 
   // --- Export Handlers ---
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (matches.length === 0) return;
 
-    const data = matches.map((m) => ({
-      Fecha: new Date(m.date).toLocaleDateString(),
-      Hora: new Date(m.date).toLocaleTimeString(),
-      Cancha: m.field?.name || "Sin Sede",
-      Categoría: m.category || "General",
-      Local: m.localTeam?.name || "Local",
-      Visita: m.awayTeam?.name || "Visita",
-      Vocal: m.vocal?.name || "Sin Asignar",
-    }));
+    try {
+      setIsExporting("excel");
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Programación", {
+        views: [{ showGridLines: false }],
+      });
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Programación");
-    XLSX.writeFile(
-      wb,
-      `programacion_${currentDate.toISOString().split("T")[0]}.xlsx`,
-    );
+      // 1. Prepare Logo Image
+      // We need to fetch the logo as a base64 string or buffer
+      let logoBase64 = "";
+      try {
+        const response = await fetch(logoDefault);
+        const blob = await response.blob();
+        logoBase64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      } catch (err) {
+        console.warn("Could not load logo for Excel", err);
+      }
+
+      // Add image to workbook if successfully loaded
+      if (logoBase64) {
+        const imageId = workbook.addImage({
+          base64: logoBase64,
+          extension: "png",
+        });
+
+        // Add image to worksheet
+        // tl: top-left cell, ext: dimensions in points or pixels
+        worksheet.addImage(imageId, {
+          tl: { col: 0, row: 0 },
+          ext: { width: 80, height: 80 },
+        });
+      }
+
+      // 2. Add Titles (Starting at Row 1, Column B (index 1) to leave room for the logo on the left)
+      worksheet.mergeCells("B1:G1");
+      const title1 = worksheet.getCell("B1");
+      title1.value = "LIGA INDEPENDIENTE, SOCIAL Y CULTURAL";
+      title1.font = { name: "Arial", bold: true, size: 16 };
+      title1.alignment = { horizontal: "center", vertical: "middle" };
+
+      worksheet.mergeCells("B2:G2");
+      const title2 = worksheet.getCell("B2");
+      title2.value = '" SAN FERNANDO DE GUAMANI "';
+      title2.font = {
+        name: "Arial",
+        italic: true,
+        bold: true,
+        size: 14,
+        color: { argb: "FF333333" },
+      };
+      title2.alignment = { horizontal: "center", vertical: "middle" };
+
+      worksheet.mergeCells("B3:G3");
+      const title3 = worksheet.getCell("B3");
+      title3.value = "HOJA DE PROGRAMACIÓN";
+      title3.font = {
+        name: "Arial",
+        bold: true,
+        size: 12,
+        color: { argb: "FFCC0000" },
+      };
+      title3.alignment = { horizontal: "center", vertical: "middle" };
+
+      // Set row heights for header area
+      worksheet.getRow(1).height = 25;
+      worksheet.getRow(2).height = 20;
+      worksheet.getRow(3).height = 18;
+      worksheet.getRow(4).height = 15; // padding row
+
+      // 3. Define Table Header (Starts at Row 5)
+      const headerRowIndex = 5;
+      worksheet.getRow(headerRowIndex).values = [
+        "Fecha",
+        "Hora",
+        "Cancha",
+        "Categoría",
+        "Local",
+        "Visita",
+        "Vocal",
+      ];
+
+      const headerRow = worksheet.getRow(headerRowIndex);
+      headerRow.height = 20;
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF003366" },
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      // 4. Add Match Data
+      let currentRowIndex = 6;
+      matches.forEach((m) => {
+        worksheet.getRow(currentRowIndex).values = [
+          new Date(m.date).toLocaleDateString(),
+          new Date(m.date).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          m.field?.name || "Sin Sede",
+          m.category || "General",
+          m.localTeam?.name || "Local",
+          m.awayTeam?.name || "Visita",
+          m.vocal?.name || "Sin Asignar",
+        ];
+
+        const row = worksheet.getRow(currentRowIndex);
+        row.eachCell((cell) => {
+          cell.alignment = {
+            horizontal: "center",
+            vertical: "middle",
+            wrapText: true,
+          };
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFCCCCCC" } },
+            left: { style: "thin", color: { argb: "FFCCCCCC" } },
+            bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+            right: { style: "thin", color: { argb: "FFCCCCCC" } },
+          };
+        });
+        currentRowIndex++;
+      });
+
+      // 5. Define Column Widths
+      worksheet.columns = [
+        { width: 14 }, // Fecha
+        { width: 10 }, // Hora
+        { width: 22 }, // Cancha
+        { width: 18 }, // Categoría
+        { width: 25 }, // Local
+        { width: 25 }, // Visita
+        { width: 22 }, // Vocal
+      ];
+
+      // Generate File
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(
+        blob,
+        `programacion_${currentDate.toISOString().split("T")[0]}.xlsx`,
+      );
+    } catch (error) {
+      console.error("Error exporting Excel", error);
+      setNotification("Error", "Ocurrió un error al generar el Excel", "error");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleExportPDF = async () => {
-    if (!tableRef.current) return;
+    if (!printRef.current) return;
+
+    setIsExporting("pdf");
+    // Wait for the DOM to render the printable version
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     try {
-      const imgData = await toPng(tableRef.current, { quality: 0.95 });
-      const pdf = new jsPDF("l", "mm", "a4");
+      const imgData = await toPng(printRef.current, {
+        cacheBust: true,
+        quality: 1,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+      });
+      const pdf = new jsPDF("p", "mm", "a4");
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(
+        imgData,
+        "PNG",
+        0,
+        0,
+        pdfWidth,
+        pdfHeight,
+        undefined,
+        "FAST",
+      );
       pdf.save(`programacion_${currentDate.toISOString().split("T")[0]}.pdf`);
     } catch (error) {
       console.error("Error exporting PDF", error);
+      setNotification("Error", "Error al exportar a PDF.", "error");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -316,8 +631,8 @@ export const ScheduleManagementTab = ({
             <Filter className="w-5 h-5 text-primary" />
             Filtros Globales
           </h3>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
+          <div className="grid  md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-1 gap-4">
+            <div className="lg:col-span-1">
               <Select
                 label="Torneo"
                 value={tournamentId}
@@ -330,12 +645,26 @@ export const ScheduleManagementTab = ({
                 ))}
               </Select>
             </div>
-            <div>
+            <div className="lg:col-span-1">
               <Input
-                label="Fase / Etapa"
-                value={stage}
-                onChange={(e) => setStage(e.target.value)}
-                placeholder="Ej. Fase de Grupos"
+                label="Fase / Etapa (Filtro)"
+                value={filterStage}
+                onChange={(e) => setFilterStage(e.target.value)}
+                placeholder="Todas las fases"
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <Input
+                label="Jornada / Fecha (Filtro)"
+                type="number"
+                min={1}
+                value={filterMatchDay}
+                onChange={(e) =>
+                  setFilterMatchDay(
+                    e.target.value ? Number(e.target.value) : "",
+                  )
+                }
+                placeholder="No filtrar"
               />
             </div>
           </div>
@@ -349,35 +678,78 @@ export const ScheduleManagementTab = ({
           </h3>
           <form className="space-y-4" onSubmit={handleCreateMatch}>
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+              <div className="col-span-1">
                 <Select
                   label="Categoría"
                   value={categoryId}
                   onChange={(e) => setCategoryId(Number(e.target.value))}
                 >
                   <option value={0}>Seleccionar...</option>
-                  {categories.map((c: any) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {categories.map((c: any) => {
+                    const cid = c.id || c.category_id;
+                    return (
+                      <option key={cid} value={cid}>
+                        {c.name}
+                      </option>
+                    );
+                  })}
                 </Select>
               </div>
-              <div>
+              <div className="col-span-1">
+                <Input
+                  label="Fase / Etapa"
+                  value={formStage}
+                  onChange={(e) => setFormStage(e.target.value)}
+                  placeholder="Etapa Clasificatoria"
+                  required
+                />
+              </div>
+              <div className="col-span-1">
+                <Input
+                  label="Jornada / Fecha"
+                  type="number"
+                  min={1}
+                  value={formMatchDay}
+                  onChange={(e) => setFormMatchDay(Number(e.target.value))}
+                  placeholder="1"
+                  required
+                />
+              </div>
+              <div className="col-span-1">
+                <Select
+                  label="Vocal Asignado"
+                  value={vocalIds[0] || 0}
+                  onChange={(e) => setVocalIds([Number(e.target.value)])}
+                >
+                  <option value={0}>Sin Asignar</option>
+                  {vocals.map((v: any) => {
+                    const vid = v.id || v.user_id;
+                    return (
+                      <option key={vid} value={vid}>
+                        {v.user_name || v.name}
+                      </option>
+                    );
+                  })}
+                </Select>
+              </div>
+              <div className="col-span-1">
                 <Select
                   label="Equipo 1 (Local)"
                   value={localTeamId}
                   onChange={(e) => setLocalTeamId(Number(e.target.value))}
                 >
                   <option value={0}>Seleccionar...</option>
-                  {filteredTeams.map((t: any) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
+                  {filteredTeams.map((t: any) => {
+                    const tid = t.id || t.team_id;
+                    return (
+                      <option key={tid} value={tid}>
+                        {t.team_name || t.name}
+                      </option>
+                    );
+                  })}
                 </Select>
               </div>
-              <div>
+              <div className="col-span-1">
                 <Select
                   label="Equipo 2 (Visita)"
                   value={awayTeamId}
@@ -385,66 +757,117 @@ export const ScheduleManagementTab = ({
                 >
                   <option value={0}>Seleccionar...</option>
                   {filteredTeams
-                    .filter((t: any) => t.id !== localTeamId)
-                    .map((t: any) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}
-                      </option>
-                    ))}
+                    .filter((t: any) => (t.id || t.team_id) !== localTeamId)
+                    .map((t: any) => {
+                      const tid = t.id || t.team_id;
+                      return (
+                        <option key={tid} value={tid}>
+                          {t.team_name || t.name}
+                        </option>
+                      );
+                    })}
                 </Select>
               </div>
-              <div>
-                <Select
-                  label="Vocal Asignado"
-                  value={vocalIds[0] || 0}
-                  onChange={(e) => setVocalIds([Number(e.target.value)])}
-                >
-                  <option value={0}>Sin Asignar</option>
-                  {vocals.map((v: any) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div>
+
+              <div className="col-span-1">
                 <Select
                   label="Cancha"
                   value={fieldId}
-                  onChange={(e) => setFieldId(Number(e.target.value))}
+                  onChange={(e) => setFieldId(e.target.value)}
                 >
                   <option value={0}>Seleccionar...</option>
-                  {fields.map((f: any) => (
-                    <option key={f.id} value={f.id}>
-                      {f.name}
-                    </option>
-                  ))}
+                  {fields.map((f: any) => {
+                    const fid = f.id || f.field_id;
+                    return (
+                      <option key={fid} value={fid}>
+                        {f.name}
+                      </option>
+                    );
+                  })}
                 </Select>
               </div>
-              <div>
+              <div className="col-span-1">
                 <Input
                   label="Fecha"
                   type="date"
                   value={matchDate}
                   onChange={(e) => setMatchDate(e.target.value)}
+                  required
                 />
               </div>
-              <div>
+              <div className="col-span-1">
                 <Input
                   label="Hora Inicio"
-                  type="time"
+                  type="text"
+                  placeholder="Ej: 14:30"
+                  pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+                  title="Formato de 24 horas (HH:MM)"
                   value={matchTime}
-                  onChange={(e) => setMatchTime(e.target.value)}
+                  onChange={(e) => {
+                    // Extraer solo dígitos
+                    let raw = e.target.value.replace(/[^0-9]/g, "");
+                    // Limitar a máximo 4 dígitos
+                    raw = raw.slice(0, 4);
+
+                    // Validar la hora (primeros 2 dígitos)
+                    if (raw.length >= 2) {
+                      const hours = parseInt(raw.slice(0, 2), 10);
+                      if (hours > 23) {
+                        // Si es mayor a 23, limitarlo a "23"
+                        raw = "23" + raw.slice(2);
+                      }
+                    } else if (raw.length === 1 && parseInt(raw[0], 10) > 2) {
+                      // Si el primer dígito es mayor a 2, asumimos que es 0X
+                      raw = "0" + raw[0];
+                    }
+
+                    // Validar los minutos (siguientes 2 dígitos)
+                    if (raw.length >= 4) {
+                      const minutes = parseInt(raw.slice(2, 4), 10);
+                      if (minutes > 59) {
+                        // Si es mayor a 59, limitarlo a "59"
+                        raw = raw.slice(0, 2) + "59";
+                      }
+                    } else if (raw.length === 3 && parseInt(raw[2], 10) > 5) {
+                      // Si el primer dígito de los minutos es > 5
+                      raw = raw.slice(0, 2) + "0" + raw[2];
+                    }
+
+                    // Formatear añadiendo los dos puntos automáticamente
+                    let formatted = raw;
+                    if (raw.length >= 3) {
+                      formatted = raw.slice(0, 2) + ":" + raw.slice(2);
+                    }
+
+                    setMatchTime(formatted);
+                  }}
+                  required
                 />
               </div>
             </div>
-            <Button
-              type="submit"
-              className="w-full mt-4 gap-2 shadow-lg shadow-primary/20"
-            >
-              <PlusCircle className="w-5 h-5" />
-              Confirmar Programación
-            </Button>
+            <div className="flex gap-2 mt-4">
+              <Button
+                type="submit"
+                className="w-full gap-2 shadow-lg shadow-primary/20"
+              >
+                {editingMatchId ? (
+                  <Edit className="w-5 h-5" />
+                ) : (
+                  <PlusCircle className="w-5 h-5" />
+                )}
+                {editingMatchId
+                  ? "Actualizar Partido"
+                  : "Confirmar Programación"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={resetForm}
+                className="w-full"
+              >
+                {editingMatchId ? "Cancelar" : "Limpiar"}
+              </Button>
+            </div>
           </form>
         </div>
 
@@ -530,7 +953,7 @@ export const ScheduleManagementTab = ({
             <div className="col-span-1">Hora</div>
             <div className="col-span-2">Cancha</div>
             <div className="col-span-2">Categoría</div>
-            <div className="col-span-4">Enfrentamiento</div>
+            <div className="col-span-4 justify-self-center">Enfrentamiento</div>
             <div className="col-span-2">Vocal</div>
             <div className="col-span-1 justify-self-end">Acciones</div>
           </div>
@@ -550,56 +973,226 @@ export const ScheduleManagementTab = ({
               matches.map((match) => (
                 <div
                   key={match.id}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-4 md:py-5 border-b border-border items-center hover:bg-bg/20 transition-colors group relative"
+                  className="md:border-b md:border-border transition-colors group relative pt-4 md:pt-0 pb-2 md:pb-0"
                 >
-                  <div className="col-span-1 flex items-center justify-between md:block">
-                    <span className="md:hidden text-xs font-bold text-text-muted">
-                      HORA:
-                    </span>
-                    <span className="text-text font-bold">
-                      {formatTime(match.date)}
-                    </span>
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-text-muted hidden md:block" />
-                    <span className="text-text-muted text-sm truncate">
-                      {match.field?.name || "Sin Sede"}
-                    </span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="px-2 py-1 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase truncate inline-block">
-                      {match.category?.name || "General"}
-                    </span>
-                  </div>
-                  <div className="col-span-4 flex items-center gap-3">
-                    <div className="flex items-center gap-2 w-full text-left">
-                      <span className="text-text font-medium text-sm">
-                        {match.localTeam?.name || "Local"}
-                      </span>
-                      <span className="text-text-muted text-[10px]">vs</span>
-                      <span className="text-text font-medium text-sm">
-                        {match.awayTeam?.name || "Visita"}
+                  {/* Desktop View */}
+                  <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-5 items-center md:hover:bg-bg/20">
+                    <div className="col-span-1">
+                      <span className="text-text font-bold">
+                        {formatTime(match.date)}
                       </span>
                     </div>
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex items-center justify-center text-xs text-text">
-                      {(match.vocal?.name || "S").charAt(0)}
+                    <div className="col-span-2 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-text-muted" />
+                      <span className="text-text-muted text-sm truncate">
+                        {match.field?.name || "Sin Sede"}
+                      </span>
                     </div>
-                    <span className="text-text-muted text-sm truncate">
-                      {match.vocal?.name || "Sin Asignar"}
-                    </span>
+                    <div className="col-span-2">
+                      <span className="px-2 py-1 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase truncate inline-block">
+                        {match.category || "General"}
+                      </span>
+                    </div>
+                    <div className="col-span-4 flex items-center gap-3">
+                      <div className="flex items-center justify-end gap-2 flex-1">
+                        <span className="text-text font-medium text-sm truncate max-w-[120px]">
+                          {match.localTeam?.name || "Local"}
+                        </span>
+                        <div className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                          {getTeamLogo(
+                            match.localTeam?.id || match.localTeam?.team_id,
+                          ) ? (
+                            <img
+                              src={
+                                getTeamLogo(
+                                  match.localTeam?.id ||
+                                    match.localTeam?.team_id,
+                                )!
+                              }
+                              alt="Local"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[10px] font-bold text-text-muted">
+                              {(match.localTeam?.name || "L")
+                                .substring(0, 2)
+                                .toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-text-muted text-[10px] font-bold uppercase tracking-widest px-1">
+                        vs
+                      </span>
+                      <div className="flex items-center justify-start gap-2 flex-1">
+                        <div className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                          {getTeamLogo(
+                            match.awayTeam?.id || match.awayTeam?.team_id,
+                          ) ? (
+                            <img
+                              src={
+                                getTeamLogo(
+                                  match.awayTeam?.id || match.awayTeam?.team_id,
+                                )!
+                              }
+                              alt="Visita"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[10px] font-bold text-text-muted">
+                              {(match.awayTeam?.name || "V")
+                                .substring(0, 2)
+                                .toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-text font-medium text-sm truncate max-w-[120px]">
+                          {match.awayTeam?.name || "Visita"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-span-2 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary border border-primary/20 overflow-hidden flex items-center justify-center text-xs font-bold uppercase">
+                        {(match.vocal?.name || "S").charAt(0)}
+                      </div>
+                      <span className="text-text-muted text-sm truncate">
+                        {match.vocal?.name || "Sin Asignar"}
+                      </span>
+                    </div>
+                    <div className="col-span-1 flex justify-end gap-1">
+                      <button
+                        onClick={() => handleEditMatch(match)}
+                        className="p-1.5 hover:bg-primary/20 hover:text-primary text-text-muted rounded"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteId(match.id)}
+                        className="p-1.5 hover:bg-danger/20 hover:text-danger text-text-muted rounded"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="col-span-1 flex justify-end gap-1">
-                    <button className="p-1.5 hover:bg-primary/20 hover:text-primary text-text-muted rounded transition-all">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteId(match.id)}
-                      className="p-1.5 hover:bg-red-500/20 hover:text-red-500 text-text-muted rounded transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+
+                  {/* Mobile View */}
+                  <div className="md:hidden bg-surface rounded-xl border border-border shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-primary/30 transition-all duration-300 overflow-hidden relative mx-4 mt-2">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="text-[10px] font-bold text-primary tracking-widest uppercase mb-1">
+                            {match.category || "General"}
+                          </p>
+                          <h3 className="text-sm font-semibold text-text">
+                            {match.stage || "Partido"}
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex flex-col items-center gap-2 flex-1 relative z-10">
+                          {getTeamLogo(
+                            match.localTeam?.id || match.localTeam?.team_id,
+                          ) ? (
+                            <div className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                              <img
+                                src={
+                                  getTeamLogo(
+                                    match.localTeam?.id ||
+                                      match.localTeam?.team_id,
+                                  )!
+                                }
+                                alt="Local"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-bg flex items-center justify-center border-2 border-primary/20 text-xs font-bold text-text uppercase shadow-inner">
+                              {match.localTeam?.name
+                                ? match.localTeam.name.substring(0, 2)
+                                : "L"}
+                            </div>
+                          )}
+                          <span className="text-xs font-medium text-center">
+                            {match.localTeam?.name || "Local"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1 shrink-0 px-2 relative z-0">
+                          <span className="text-lg font-black text-text-muted italic tracking-widest opacity-80">
+                            VS
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 flex-1 relative z-10">
+                          {getTeamLogo(
+                            match.awayTeam?.id || match.awayTeam?.team_id,
+                          ) ? (
+                            <div className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                              <img
+                                src={
+                                  getTeamLogo(
+                                    match.awayTeam?.id ||
+                                      match.awayTeam?.team_id,
+                                  )!
+                                }
+                                alt="Visita"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-bg flex items-center justify-center border-2 border-primary/20 text-xs font-bold text-text uppercase shadow-inner">
+                              {match.awayTeam?.name
+                                ? match.awayTeam.name.substring(0, 2)
+                                : "V"}
+                            </div>
+                          )}
+                          <span className="text-xs font-medium text-center">
+                            {match.awayTeam?.name || "Visita"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-2 border-t border-border pt-3">
+                        <div className="flex items-center text-xs text-text-muted gap-2">
+                          <MapPin className="w-4 h-4 text-primary" />
+                          <span>{match.field?.name || "Sin Sede"}</span>
+                        </div>
+                        <div className="flex items-center text-xs text-text-muted gap-2">
+                          <Calendar className="w-4 h-4 text-primary" />
+                          <span>
+                            {new Date(match.date).toLocaleDateString("es-ES")} -{" "}
+                            {formatTime(match.date)}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-xs text-text-muted gap-2">
+                          <div className="w-4 h-4 rounded-full bg-primary/10 text-primary border border-primary/20 overflow-hidden flex items-center justify-center text-[8px] font-bold uppercase shrink-0">
+                            {(match.vocal?.name || "S").charAt(0)}
+                          </div>
+                          <span className="truncate">
+                            Vocal:{" "}
+                            <span className="font-medium text-text">
+                              {match.vocal?.name || "Sin Asignar"}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-bg/50 px-4 py-2 flex justify-between items-center border-t border-border">
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleEditMatch(match)}
+                          className="flex items-center gap-1 text-text-muted hover:text-primary transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                          <span className="text-xs font-medium">Editar</span>
+                        </button>
+                        <button
+                          onClick={() => setDeleteId(match.id)}
+                          className="flex items-center gap-1 text-text-muted hover:text-danger transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span className="text-xs font-medium">Eliminar</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))
@@ -661,6 +1254,42 @@ export const ScheduleManagementTab = ({
           <Button onClick={() => setIsMassGenOpen(false)}>Entendido</Button>
         </div>
       </Modal>
+
+      {isExporting && (
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-overlay/60 backdrop-blur-sm">
+          <div className="bg-surface p-8 rounded-2xl shadow-2xl border border-border flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="font-bold text-lg">
+              {isExporting === "excel"
+                ? "Generando Excel..."
+                : "Generando PDF..."}
+            </p>
+            <p className="text-sm text-text-muted">
+              Por favor espera un momento
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden Print Template */}
+      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+        <div ref={printRef}>
+          <SchedulePrintTemplate
+            logoUrl={logoDefault}
+            title1="LIGA INDEPENDIENTE, SOCIAL Y CULTURAL"
+            title2='" SAN FERNANDO DE GUAMANI "'
+            title3="HOJA DE PROGRAMACIÓN"
+            fecha={Number(filterMatchDay) || 1}
+            vuelta={1}
+            days={daysForPrint}
+            teams={teams}
+            categories={categories}
+            vocals={vocals}
+            fields={fields}
+            assignedVocalsSummary={assignedVocalsSummaryForPrint}
+          />
+        </div>
+      </div>
     </div>
   );
 };

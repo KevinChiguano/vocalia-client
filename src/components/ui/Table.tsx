@@ -4,7 +4,7 @@ import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 interface Column<T = any> {
   key: string;
-  label: string;
+  label: React.ReactNode;
   width?: string;
   mobileLabel?: string;
   sortable?: boolean;

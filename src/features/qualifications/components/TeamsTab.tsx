@@ -6,6 +6,7 @@ import { Team, TeamFilters, CreateTeamDto } from "../types/team.types";
 import { Category } from "../types/category.types";
 import { TeamCard } from "../components/TeamCard";
 import { TeamForm } from "../components/TeamForm";
+import { BulkImportTeamModal } from "../components/BulkImportTeamModal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PaginationFooter } from "@/components/ui/PaginationFooter";
@@ -30,6 +31,7 @@ export const TeamsTab = () => {
   });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -138,9 +140,14 @@ export const TeamsTab = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="gap-2">
+          <Button
+            variant="secondary"
+            className="gap-2"
+            onClick={() => setIsImportModalOpen(true)}
+            disabled={categories.length === 0}
+          >
             <Upload className="w-5 h-5" />
-            <span>Importación Masiva</span>
+            <span>Importar Excel</span>
           </Button>
           <Button
             onClick={handleCreate}
@@ -286,6 +293,16 @@ export const TeamsTab = () => {
           initialData={editingTeam}
           categories={categories}
           isLoading={formLoading}
+        />
+      )}
+
+      {categories.length > 0 && (
+        <BulkImportTeamModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onSuccess={() => fetchData()}
+          categories={categories}
+          categoryId={filters.category ? Number(filters.category) : undefined}
         />
       )}
 

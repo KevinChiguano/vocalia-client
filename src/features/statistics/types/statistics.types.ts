@@ -15,10 +15,12 @@ export interface PlayerStats {
     id: number;
     name: string;
     number: number;
+    image?: string;
   };
   team: {
     id: number;
     name: string;
+    logo?: string;
   };
   matchesPlayed: number;
   goals: number;
@@ -30,6 +32,7 @@ export interface TeamStats {
   team: {
     id: number;
     name: string;
+    logo?: string;
   };
   played: number;
   won: number;
@@ -47,8 +50,12 @@ export interface TopScorerStats {
   player: {
     id: number;
     name: string;
+    image?: string;
   };
-  team: string; // Note: API returns string name, not object? Let's verify controller response again if needed.
+  team: {
+    name: string;
+    logo?: string;
+  };
   goals: number;
 }
 
