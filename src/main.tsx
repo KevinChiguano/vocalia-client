@@ -10,6 +10,7 @@ import { router } from "@/routes/AppRouter";
 import { useAuthStore } from "@/store/auth.store";
 
 import "@/styles/index.css";
+import "material-symbols/outlined.css";
 
 const hydrateAuth = useAuthStore.getState().hydrate;
 
@@ -20,5 +21,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

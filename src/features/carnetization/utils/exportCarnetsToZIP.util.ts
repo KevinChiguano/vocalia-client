@@ -16,14 +16,12 @@ export const exportCarnetsToZIP = async ({
 
   const options = {
     pixelRatio: 4,
-    width: 450,
-    height: 284,
-    backgroundColor: "transparent",
+    cacheBust: true,
   };
 
   for (const player of players) {
-    const front = document.getElementById(`carnet-frente-${player.dni}`);
-    const back = document.getElementById(`carnet-reverso-${player.dni}`);
+    const front = document.getElementById(`print-carnet-frente-${player.dni}`);
+    const back = document.getElementById(`print-carnet-reverso-${player.dni}`);
 
     if (!front || !back) continue;
 

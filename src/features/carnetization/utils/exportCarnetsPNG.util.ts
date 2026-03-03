@@ -14,19 +14,21 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 export const exportCarnetToPNG = async (
   playerDni: string,
-  playerName: string
+  playerName: string,
 ) => {
   const front = document.getElementById(`carnet-frente-${playerDni}`);
   const back = document.getElementById(`carnet-reverso-${playerDni}`);
 
   if (!front || !back) return false;
 
-  const WIDTH = 450;
-  const HEIGHT = 284;
+  const WIDTH = 284;
+  const HEIGHT = 450;
   const PIXEL_RATIO = 4; // calidad impresión
 
   const options = {
-    cacheBust: true,
+    cacheBust: false,
+    imagePlaceholder:
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
     pixelRatio: PIXEL_RATIO,
     width: WIDTH,
     height: HEIGHT,
