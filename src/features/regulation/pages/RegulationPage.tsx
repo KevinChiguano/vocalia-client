@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { FiltersBar } from "@/components/ui/FiltersBar";
 import { Input } from "@/components/ui/Input";
 import { Search, Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -54,57 +55,64 @@ const RegulationPage = () => {
   };
 
   return (
-    <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Search and Filter Section */}
-      <div className="flex flex-col gap-6 mb-10">
-        <div className="flex-1 max-w-2xl">
-          <PageHeader
-            title={
-              <>
-                Disciplina & <span className="text-primary">Reglamento</span>
-              </>
-            }
-            description="Consulta los artículos oficiales, normativas de conducta y el sistema de sanciones vigente."
-            className="mb-6"
-            actions={
-              user?.rol === "ADMIN" && (
-                <Button className="gap-2 shrink-0" onClick={handleCreateNew}>
-                  <Plus className="w-4 h-4" />
-                  Crear Artículo
-                </Button>
-              )
-            }
-          />
-          <Input
-            placeholder="Buscar por artículo, palabra clave o tipo de falta..."
-            leftIcon={<Search className="w-5 h-5" />}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            size="lg"
-            className="w-full"
-          />
-        </div>
 
-        {/* Categories Tabs */}
-        {!isLoading && regulationCategories.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {regulationCategories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={clsx(
-                  "px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors border",
-                  selectedCategory === category
-                    ? "bg-primary text-white border-primary"
-                    : "bg-surface hover:bg-elevated border-border text-text",
-                )}
-              >
-                {category}
-              </button>
-            ))}
+      <PageHeader
+        title={
+          <>
+            Disciplina & <span className="text-primary">Reglamento</span>
+          </>
+        }
+        description="Consulta los artículos oficiales, normativas de conducta y el sistema de sanciones vigente."
+        actions={
+          user?.rol === "ADMIN" && (
+            <Button
+              className="gap-2 shadow-lg hover:shadow-primary/25 w-full sm:w-auto"
+              onClick={handleCreateNew}
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>Crear Artículo</span>
+            </Button>
+          )
+        }
+      />
+
+      <FiltersBar
+        left={
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <div className="relative flex-1 sm:max-w-md">
+              <Input
+                placeholder="Buscar por artículo, palabra clave o tipo de falta..."
+                leftIcon={<Search className="w-5 h-5" />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
           </div>
-        )}
-      </div>
+        }
+      />
+
+      {/* Categories Tabs */}
+      {!isLoading && regulationCategories.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {regulationCategories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={clsx(
+                "px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors border",
+                selectedCategory === category
+                  ? "bg-primary text-white border-primary"
+                  : "bg-surface hover:bg-elevated border-border text-text",
+              )}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Rules Grid */}
       {isLoading ? (
