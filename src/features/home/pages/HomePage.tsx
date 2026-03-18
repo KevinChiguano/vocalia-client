@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import { ModuleCard } from "@/features/home/components/ModuleCard";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
 const HomePage = () => {
+  const { user } = useAuth();
   const modules = [
     {
       title: "GESTIÓN DE USUARIOS",
@@ -74,8 +76,8 @@ const HomePage = () => {
       <PageHeader
         title={
           <>
-            Sistema Integral de Administración Deportiva y Estadísticas de{" "}
-            <span className="text-primary">Campeonatos</span>
+            Sistema Integral de Administración Deportiva y{" "}
+            <span className="text-primary"> Estadísticas de Campeonatos</span>
           </>
         }
         description="Selecciona un módulo para comenzar a trabajar."
@@ -88,9 +90,22 @@ const HomePage = () => {
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {modules.map((module) => (
-          <ModuleCard key={module.title} {...module} />
-        ))}
+        {modules
+          .filter((m) => {
+            if (user?.rol === "ADMIN") return true;
+            if (user?.rol === "VOCAL") {
+              return ["VOCALÍA DIGITAL", "Reglamento", "ESTADÍSTICAS"].includes(
+                m.title,
+              );
+            }
+            if (user?.rol === "USER") {
+              return ["ESTADÍSTICAS"].includes(m.title);
+            }
+            return false;
+          })
+          .map((module) => (
+            <ModuleCard key={module.title} {...module} />
+          ))}
       </div>
     </div>
   );

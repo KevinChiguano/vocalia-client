@@ -102,36 +102,34 @@ export const TournamentCard = ({
         </div>
 
         {/* Acciones */}
-        <div className="pt-5 mt-auto border-t border-border/50">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(tournament)}
-              className="flex-[0.8] gap-1.5 text-sm rounded-xl border-border text-text hover:bg-surface-hover hover:text-text h-10"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-              <span>Editar</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onManageTeams(tournament)}
-              className="flex-1 gap-1.5 text-sm rounded-xl border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 h-10"
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Equipos</span>
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => onDelete(tournament.id)}
-              className="px-3 rounded-xl h-10"
-              aria-label="Eliminar torneo"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
+        <div className="flex gap-2 pt-4 mt-auto border-t border-border/50">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onEdit(tournament)}
+            className="flex-1 gap-2"
+          >
+            <Edit2 className="w-4 h-4" />
+            <span>Editar</span>
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onManageTeams(tournament)}
+            className="flex-1 gap-2"
+          >
+            <Users className="w-4 h-4" />
+            <span>Equipos</span>
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => onDelete(tournament.id)}
+            className="px-3 md:px-4"
+            aria-label="Eliminar torneo"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </div>

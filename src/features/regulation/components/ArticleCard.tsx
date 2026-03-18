@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
-import { Info, ArrowRight, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 import { RegulationArticle } from "../types/regulation.types";
 import clsx from "clsx";
 
@@ -7,26 +7,59 @@ interface ArticleCardProps {
   article: RegulationArticle;
   isAdmin?: boolean;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export const ArticleCard = ({ article, isAdmin, onEdit }: ArticleCardProps) => {
+export const ArticleCard = ({
+  article,
+  isAdmin,
+  onEdit,
+  onDelete,
+}: ArticleCardProps) => {
   return (
     <div className="bg-surface border border-border rounded-xl p-6 hover:border-primary/50 transition-all flex flex-col justify-between">
       <div>
         <div className="flex justify-between items-start mb-4">
           <Badge variant={article.badge_variant}>{article.article_num}</Badge>
-          <div className="flex gap-2">
-            {isAdmin && onEdit && (
-              <button
-                onClick={onEdit}
-                className="text-text-muted hover:text-primary transition-colors p-1"
-                title="Editar artículo"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-            )}
-            <Info className="w-4 h-4 text-text-muted mt-1" />
-          </div>
+          {isAdmin && (
+            <div className="flex gap-2">
+              {onEdit && (
+                <button
+                  onClick={onEdit}
+                  className="text-text-muted hover:text-primary transition-colors p-1"
+                  title="Editar artículo"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={onDelete}
+                  className="text-text-muted hover:text-danger hover:bg-danger/10 rounded-full transition-colors p-1"
+                  title="Eliminar artículo"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-trash-2"
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                    <line x1="10" x2="10" y1="11" y2="17" />
+                    <line x1="14" x2="14" y1="11" y2="17" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <h3 className="type-h4 font-bold mb-3">{article.title}</h3>
@@ -53,10 +86,6 @@ export const ArticleCard = ({ article, isAdmin, onEdit }: ArticleCardProps) => {
             {article.sanction}
           </span>
         </div>
-
-        <button className="flex items-center gap-2 text-sm font-semibold hover:text-primary transition-colors text-text">
-          Ver detalles <ArrowRight className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );

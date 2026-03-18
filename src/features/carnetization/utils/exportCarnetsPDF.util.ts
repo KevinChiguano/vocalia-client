@@ -35,6 +35,7 @@ export const exportCarnetsToPDF = async ({
         pixelRatio: 2,
         cacheBust: true,
         backgroundColor: "#ffffff",
+        fontEmbedCSS: "",
       });
       headerImgBase64 = headerCanvas.toDataURL("image/png");
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -83,6 +84,7 @@ export const exportCarnetsToPDF = async ({
         cacheBust: true, // Prevents html-to-image from caching the wrong cross-origin images during bulk ops
         imagePlaceholder:
           "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+        fontEmbedCSS: "",
       };
 
       const frontCanvas = await toCanvas(front, options);

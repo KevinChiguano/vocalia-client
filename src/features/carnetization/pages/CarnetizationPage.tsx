@@ -1,5 +1,13 @@
 import { useState, useMemo } from "react";
-import { Search, Printer, Palette, Filter, Download, List } from "lucide-react";
+import {
+  Search,
+  Printer,
+  Palette,
+  Filter,
+  Download,
+  List,
+  FilterX,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useUIStore } from "@/store/ui.store";
 import { CarnetPreview } from "../components/CarnetPreview";
@@ -116,6 +124,19 @@ const CarnetizationPage = () => {
     setAppliedTeam(selectedTeam || undefined);
     setAppliedSearch(searchTerm);
   };
+
+  const handleClearFilters = () => {
+    setSelectedCategory("");
+    setSelectedTeam("");
+    setSearchTerm("");
+    setAppliedCategory(undefined);
+    setAppliedTeam(undefined);
+    setAppliedSearch("");
+    setSelectedPlayers([]);
+  };
+
+  const hasActiveFilters =
+    selectedCategory !== "" || selectedTeam !== "" || searchTerm !== "";
 
   const handleDownloadAllZIP = async () => {
     if (!selectedCategory || !selectedTeam) {
@@ -279,15 +300,27 @@ const CarnetizationPage = () => {
                 ))}
               </Select>
 
-              <Button
-                variant="primary"
-                onClick={handleSearch}
-                disabled={!selectedCategory || !selectedTeam}
-                className="w-full h-10"
-              >
-                <Search className="w-4 h-4 mr-2" />
-                Buscar
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="primary"
+                  onClick={handleSearch}
+                  disabled={!selectedCategory || !selectedTeam}
+                  className="w-full h-10"
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  Buscar
+                </Button>
+                {hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    onClick={handleClearFilters}
+                    className="w-full h-10 border-border hover:bg-surface text-text-muted hover:text-text transition-colors"
+                  >
+                    <FilterX className="w-4 h-4 mr-2" />
+                    Limpiar Filtros
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
 

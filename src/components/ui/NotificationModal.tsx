@@ -15,7 +15,7 @@ export const NotificationModal = () => {
           bgClass: "bg-green-50 dark:bg-green-900/10",
           iconBg: "bg-green-100 dark:bg-green-900/30",
           iconColor: "text-green-600 dark:text-green-400",
-          titleColor: "text-green-700 dark:text-green-300",
+          titleColor: "text-green-900 dark:text-green-100",
           borderColor: "border-green-500/20",
           Icon: CheckCircle2,
         };
@@ -24,7 +24,7 @@ export const NotificationModal = () => {
           bgClass: "bg-red-50 dark:bg-red-900/10",
           iconBg: "bg-red-100 dark:bg-red-900/30",
           iconColor: "text-red-600 dark:text-red-400",
-          titleColor: "text-red-700 dark:text-red-300",
+          titleColor: "text-red-900 dark:text-red-100",
           borderColor: "border-red-500/20",
           Icon: AlertCircle,
         };
@@ -34,7 +34,7 @@ export const NotificationModal = () => {
           bgClass: "bg-blue-50 dark:bg-blue-900/10",
           iconBg: "bg-blue-100 dark:bg-blue-900/30",
           iconColor: "text-blue-600 dark:text-blue-400",
-          titleColor: "text-blue-700 dark:text-blue-300",
+          titleColor: "text-blue-900 dark:text-blue-100",
           borderColor: "border-blue-500/20",
           Icon: Info,
         };
