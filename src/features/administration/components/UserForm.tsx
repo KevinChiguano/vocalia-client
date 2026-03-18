@@ -2,7 +2,16 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Save, User as UserIcon, Mail, Lock, Shield } from "lucide-react";
+import { useState } from "react";
+import {
+  Save,
+  User as UserIcon,
+  Mail,
+  Lock,
+  Shield,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { User, CreateUserDto, UpdateUserDto } from "../types/user.types";
 import { useUsers } from "../hooks/useUsers";
 import { Button } from "@/components/ui/Button";
@@ -30,6 +39,7 @@ interface Props {
 
 export const UserForm = ({ isOpen, onClose, userToEdit }: Props) => {
   const { createUserMutation, updateUserMutation, rolesQuery } = useUsers();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -75,8 +85,8 @@ export const UserForm = ({ isOpen, onClose, userToEdit }: Props) => {
         const updateData: UpdateUserDto = {
           name: data.name,
           email: data.email,
-          rol_id: data.rol_id,
-          is_active: data.isActive,
+          rolId: data.rol_id,
+          isActive: data.isActive,
         };
         if (data.password) updateData.password = data.password;
 
@@ -89,7 +99,7 @@ export const UserForm = ({ isOpen, onClose, userToEdit }: Props) => {
           name: data.name,
           email: data.email,
           password: data.password || "123456", // Default password if empty
-          rol_id: data.rol_id,
+          rolId: data.rol_id,
         };
         await createUserMutation.mutateAsync(createData);
       }
@@ -128,7 +138,6 @@ export const UserForm = ({ isOpen, onClose, userToEdit }: Props) => {
             <Input
               id="name"
               placeholder="Ej: Juan Pérez"
-              className="pl-9"
               {...register("name")}
               autoFocus
             />
@@ -155,7 +164,6 @@ export const UserForm = ({ isOpen, onClose, userToEdit }: Props) => {
               id="email"
               placeholder="juan@ejemplo.com"
               type="email"
-              className="pl-9"
               {...register("email")}
             />
           </div>
@@ -180,10 +188,20 @@ export const UserForm = ({ isOpen, onClose, userToEdit }: Props) => {
             <Input
               id="password"
               placeholder="********"
-              type="password"
-              className="pl-9"
+              type={showPassword ? "text" : "password"}
               {...register("password")}
             />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors focus:outline-none"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
           </div>
           {errors.password?.message && (
             <p className="text-xs text-danger font-medium">

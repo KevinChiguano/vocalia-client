@@ -2,16 +2,18 @@ import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FiltersBar } from "@/components/ui/FiltersBar";
 import { Input } from "@/components/ui/Input";
-import { Search, Download, Plus } from "lucide-react";
+import { Search, Download, Plus, FilterX } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ArticleCard } from "../components/ArticleCard";
 import { regulationApi } from "../api/regulation.api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUIStore } from "@/store/ui.store";
 import { InlineSpinner } from "@/components/ui/InlineSpinner";
 import { useAuthStore } from "@/store/auth.store";
 import { RegulationFormModal } from "../components/RegulationFormModal";
 import { RegulationArticle } from "../types/regulation.types";
 import clsx from "clsx";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 const RegulationPage = () => {
   const { user } = useAuthStore();
@@ -21,9 +23,36 @@ const RegulationPage = () => {
   const [selectedArticle, setSelectedArticle] =
     useState<RegulationArticle | null>(null);
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [articleToDelete, setArticleToDelete] =
+    useState<RegulationArticle | null>(null);
+
+  const queryClient = useQueryClient();
+  const { setNotification } = useUIStore();
+
   const { data: articles = [], isLoading } = useQuery({
     queryKey: ["regulation-articles"],
     queryFn: () => regulationApi.getAllActive(),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => regulationApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["regulation-articles"] });
+      setNotification(
+        "Éxito",
+        "El artículo se eliminó correctamente.",
+        "success",
+      );
+      setDeleteModalOpen(false);
+    },
+    onError: () => {
+      setNotification(
+        "Error",
+        "Ocurrió un error al eliminar el artículo.",
+        "error",
+      );
+    },
   });
 
   const regulationCategories = useMemo(() => {
@@ -53,6 +82,24 @@ const RegulationPage = () => {
     setSelectedArticle(article);
     setIsModalOpen(true);
   };
+
+  const handleDeleteClick = (article: RegulationArticle) => {
+    setArticleToDelete(article);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (articleToDelete) {
+      deleteMutation.mutate(articleToDelete.article_id);
+    }
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("Todos");
+  };
+
+  const hasActiveFilters = searchQuery !== "" || selectedCategory !== "Todos";
 
   return (
     <div className="w-full px-0 sm:px-4 lg:px-6 2xl:max-w-screen-2xl 2xl:mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -90,6 +137,16 @@ const RegulationPage = () => {
                 className="w-full"
               />
             </div>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                className="gap-2 sm:w-auto w-full border-border hover:bg-surface text-text-muted hover:text-text transition-colors"
+                onClick={handleClearFilters}
+              >
+                <FilterX className="w-4 h-4" />
+                <span>Limpiar Filtros</span>
+              </Button>
+            )}
           </div>
         }
       />
@@ -128,6 +185,7 @@ const RegulationPage = () => {
                 article={article}
                 isAdmin={user?.rol === "ADMIN"}
                 onEdit={() => handleEdit(article)}
+                onDelete={() => handleDeleteClick(article)}
               />
             ))
           ) : (
@@ -165,6 +223,16 @@ const RegulationPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         article={selectedArticle}
+      />
+
+      <ConfirmModal
+        open={deleteModalOpen}
+        title="Eliminar Artículo"
+        description={`¿Estás seguro de que deseas eliminar el ${articleToDelete?.article_num}? Esta acción no se puede deshacer.`}
+        confirmText={deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
+        danger
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteModalOpen(false)}
       />
     </div>
   );

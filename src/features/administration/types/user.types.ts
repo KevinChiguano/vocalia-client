@@ -15,13 +15,13 @@ export interface CreateUserDto {
   name: string;
   email: string;
   password?: string;
-  rol_id: number;
+  rolId: number;
 }
 
 export interface UpdateUserDto {
   name?: string;
   email?: string;
   password?: string;
-  rol_id?: number;
-  is_active?: boolean;
+  rolId?: number;
+  isActive?: boolean;
 }

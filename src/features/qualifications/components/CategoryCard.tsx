@@ -17,7 +17,7 @@ export const CategoryCard = ({ category, onEdit, onDelete }: Props) => {
       shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-xl 
       hover:border-primary/40 flex flex-col h-full"
     >
-      <div className="p-5 sm:p-6">
+      <div className="p-5 sm:p-6 flex flex-col flex-1">
         <div className="flex items-start gap-4 mb-4">
           <div
             className="
@@ -65,31 +65,24 @@ export const CategoryCard = ({ category, onEdit, onDelete }: Props) => {
         )}
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
+        <div className="flex gap-2 pt-4 mt-auto border-t border-border/50">
           <Button
             variant="secondary"
             size="sm"
             onClick={() => onEdit(category)}
-            className="
-              flex-1 sm:flex-none gap-2"
+            className="flex-1 gap-2"
           >
             <Edit2 className="w-4 h-4" />
-            <span className="hidden xs:inline">Editar</span>
+            <span>Editar</span>
           </Button>
-
           <Button
             variant="danger"
             size="sm"
             onClick={() => onDelete(category.id)}
-            className="
-              px-3 sm:px-4
-              hover:scale-105 active:scale-95
-              transition-transform duration-200
-            "
+            className="px-3 md:px-4"
             aria-label="Eliminar categoría"
           >
             <Trash2 className="w-4 h-4" />
-            <span className="hidden sm:inline ml-2">Eliminar</span>
           </Button>
         </div>
       </div>

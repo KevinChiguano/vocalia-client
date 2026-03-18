@@ -38,6 +38,8 @@ const Base64Image = ({ src, alt, className, style }: any) => {
     };
   }, [src]);
 
+  if (!src) return null;
+
   return (
     <img
       src={base64 || src}

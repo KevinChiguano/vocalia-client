@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Upload, AlertCircle } from "lucide-react";
@@ -35,6 +35,14 @@ export const BulkImportTeamModal = ({
     categoryId ? String(categoryId) : "",
   );
 
+  useEffect(() => {
+    if (categoryId) setSelectedCategory(String(categoryId));
+    if (isOpen) {
+      setData([]);
+      setError(null);
+    }
+  }, [categoryId, isOpen]);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -46,7 +54,26 @@ export const BulkImportTeamModal = ({
       const wb = XLSX.read(bstr, { type: "binary" });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
-      const parsedData = XLSX.utils.sheet_to_json(ws);
+
+      // Find the row with headers to skip titles
+      const rawData = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+      let headerRowIndex = 0;
+      for (let i = 0; i < rawData.length; i++) {
+        const row = rawData[i] || [];
+        if (
+          row.includes("Nombre del Equipo") ||
+          row.includes("Nombre") ||
+          row.includes("name") ||
+          row.includes("nombre")
+        ) {
+          headerRowIndex = i;
+          break;
+        }
+      }
+
+      const parsedData = XLSX.utils.sheet_to_json(ws, {
+        range: headerRowIndex,
+      });
       setData(parsedData); // Preview data
     };
 
@@ -59,8 +86,14 @@ export const BulkImportTeamModal = ({
     try {
       // Map and validate
       const teamsToCreate: CreateTeamDto[] = data.map((row: any) => ({
-        name: row.Nombre || row.name || row.nombre,
-        logo: row.Logo || row.logo || undefined,
+        name: String(
+          row["Nombre del Equipo"] ||
+            row.Nombre ||
+            row.name ||
+            row.nombre ||
+            "",
+        ),
+        logo: row["URL Logo (Opcional)"] || row.Logo || row.logo || undefined,
         categoryId:
           Number(selectedCategory) ||
           (row.CategoryId || row.category_id
@@ -291,7 +324,10 @@ export const BulkImportTeamModal = ({
                 {data.slice(0, 5).map((row, i) => (
                   <tr key={i} className="hover:bg-surface/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
-                      {row.Nombre || row.name || row.nombre}
+                      {row["Nombre del Equipo"] ||
+                        row.Nombre ||
+                        row.name ||
+                        row.nombre}
                     </td>
                   </tr>
                 ))}

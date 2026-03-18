@@ -40,6 +40,10 @@ export const BulkImportPlayerModal = ({
   useEffect(() => {
     if (teamId) setSelectedTeam(String(teamId));
     if (categoryId) setSelectedCategory(String(categoryId));
+    if (isOpen) {
+      setData([]);
+      setError(null);
+    }
   }, [teamId, categoryId, isOpen]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,8 +57,26 @@ export const BulkImportPlayerModal = ({
       const wb = XLSX.read(bstr, { type: "binary" });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws);
-      setData(data); // Preview data
+
+      // Find the row with headers to skip titles
+      const rawData = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+      let headerRowIndex = 0;
+      for (let i = 0; i < rawData.length; i++) {
+        const row = rawData[i] || [];
+        if (
+          row.includes("Nombre") ||
+          row.includes("name") ||
+          row.includes("nombres")
+        ) {
+          headerRowIndex = i;
+          break;
+        }
+      }
+
+      const parsedData = XLSX.utils.sheet_to_json(ws, {
+        range: headerRowIndex,
+      });
+      setData(parsedData); // Preview data
     };
 
     reader.readAsBinaryString(file);
@@ -66,10 +88,24 @@ export const BulkImportPlayerModal = ({
     try {
       // Map and validate
       const playersToCreate: CreatePlayerDto[] = data.map((row: any) => ({
-        name: row.Nombre || row.name || row.nombres,
-        lastname: row.Apellido || row.lastname || row.apellidos,
-        dni: String(row.DNI || row.dni || row.cedula),
-        number: Number(row.Numero || row.number || row.dorsal) || undefined,
+        name: String(row.Nombre || row.name || row.nombres || ""),
+        lastname: String(row.Apellido || row.lastname || row.apellidos || ""),
+        dni: String(
+          row["DNI / Cédula"] ||
+            row["DNI / Cedula"] ||
+            row.DNI ||
+            row.dni ||
+            row.cedula ||
+            "",
+        ),
+        number:
+          Number(
+            row["Número (Dorsal)"] ||
+              row["Numero (Dorsal)"] ||
+              row.Numero ||
+              row.number ||
+              row.dorsal,
+          ) || undefined,
         teamId: Number(selectedTeam) || Number(row.TeamId || row.team_id) || 0,
         categoryId:
           Number(selectedCategory) ||
@@ -304,7 +340,11 @@ export const BulkImportPlayerModal = ({
                 {data.slice(0, 5).map((row, i) => (
                   <tr key={i} className="hover:bg-surface/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted">
-                      {row.DNI || row.dni || row.cedula}
+                      {row["DNI / Cédula"] ||
+                        row["DNI / Cedula"] ||
+                        row.DNI ||
+                        row.dni ||
+                        row.cedula}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
                       {row.Nombre || row.name || row.nombres}
@@ -313,7 +353,11 @@ export const BulkImportPlayerModal = ({
                       {row.Apellido || row.lastname || row.apellidos}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-muted">
-                      {row.Numero || row.number || row.dorsal}
+                      {row["Número (Dorsal)"] ||
+                        row["Numero (Dorsal)"] ||
+                        row.Numero ||
+                        row.number ||
+                        row.dorsal}
                     </td>
                   </tr>
                 ))}

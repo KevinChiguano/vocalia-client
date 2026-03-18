@@ -235,8 +235,7 @@ export const PlayersTab = () => {
     {
       key: "actions",
       label: "Acciones",
-      width: "100px",
-      align: "right" as any,
+      width: "120px",
     },
   ];
 
@@ -392,24 +391,23 @@ export const PlayersTab = () => {
                   >
                     {player.isActive ? "Activo" : "Inactivo"}
                   </Badge>,
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center gap-2">
                     <Button
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleEdit(player)}
-                      className="text-text-muted hover:text-text hover:bg-surface-hover h-9 w-9 p-0"
+                      className="text-primary hover:bg-primary/10 border-primary/20"
                       title="Editar"
                     >
-                      <Edit className="w-5 h-5" />
+                      <Edit className="w-4 h-4" />
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="danger"
                       size="sm"
                       onClick={() => setDeleteDni(player.dni)}
-                      className="text-text-muted hover:text-red-500 hover:bg-red-500/10 h-9 w-9 p-0"
                       title="Eliminar"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>,
                 ]}
@@ -441,17 +439,17 @@ export const PlayersTab = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEdit(player)}
-                          className="text-text-muted hover:text-text bg-surface-hover"
+                          className="h-10 w-10 p-0"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-4 h-4 text-primary" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setDeleteDni(player.dni)}
-                          className="text-text-muted hover:text-red-500 bg-surface-hover hover:bg-red-500/10"
+                          className="h-10 w-10 p-0"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 text-danger" />
                         </Button>
                       </div>
                     </div>

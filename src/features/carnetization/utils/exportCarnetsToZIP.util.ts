@@ -17,6 +17,9 @@ export const exportCarnetsToZIP = async ({
   const options = {
     pixelRatio: 4,
     cacheBust: true,
+    fontEmbedCSS: "",
+    imagePlaceholder:
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
   };
 
   for (const player of players) {

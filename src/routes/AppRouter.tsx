@@ -77,23 +77,42 @@ export const router = createBrowserRouter([
           // ---------- calificaciones (ADMIN, VOCAL, USER) ----------
           {
             path: "qualifications",
-            element: <QualificationsPage />,
+            element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
+            children: [
+              {
+                index: true,
+                element: <QualificationsPage />,
+              },
+            ],
           },
 
           // ---------- carnetización (ADMIN, VOCAL, USER) ----------
           {
             path: "credentials",
-            element: <CarnetizationPage />,
+            element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
+            children: [
+              {
+                index: true,
+                element: <CarnetizationPage />,
+              },
+            ],
           },
 
           {
             path: "technical-commission",
-            element: <TechnicalCommissionPage />,
+            element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
+            children: [
+              {
+                index: true,
+                element: <TechnicalCommissionPage />,
+              },
+            ],
           },
 
           // ---------- VOCALÍA DIGITAL (ADMIN, VOCAL, USER-readonly) ----------
           {
             path: "digital-vocalia",
+            element: <ProtectedRoute allowedRoles={["ADMIN", "VOCAL"]} />,
             children: [
               {
                 index: true,
@@ -109,7 +128,13 @@ export const router = createBrowserRouter([
           // ---------- REGLAMENTO (todos) ----------
           {
             path: "regulation",
-            element: <RegulationPage />,
+            element: <ProtectedRoute allowedRoles={["ADMIN", "VOCAL"]} />,
+            children: [
+              {
+                index: true,
+                element: <RegulationPage />,
+              },
+            ],
           },
 
           // ---------- ESTADÍSTICAS (todos) ----------

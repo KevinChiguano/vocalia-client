@@ -2,12 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/Dialog";
+import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -96,11 +91,15 @@ export const RegulationFormModal = ({
     mutationFn: (data: CreateRegulationDTO) => regulationApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["regulation-articles"] });
-      setNotification("El artículo se creó correctamente.", "", "success");
+      setNotification("Éxito", "El artículo se creó correctamente.", "success");
       onClose();
     },
     onError: () => {
-      setNotification("Error al crear el artículo.", "", "error");
+      setNotification(
+        "Error",
+        "Ocurrió un error al crear el artículo.",
+        "error",
+      );
     },
   });
 
@@ -109,11 +108,19 @@ export const RegulationFormModal = ({
       regulationApi.update(article!.article_id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["regulation-articles"] });
-      setNotification("El artículo se actualizó correctamente.", "", "success");
+      setNotification(
+        "Éxito",
+        "El artículo se actualizó correctamente.",
+        "success",
+      );
       onClose();
     },
     onError: () => {
-      setNotification("Error al actualizar el artículo.", "", "error");
+      setNotification(
+        "Error",
+        "Ocurrió un error al actualizar el artículo.",
+        "error",
+      );
     },
   });
 
@@ -128,82 +135,79 @@ export const RegulationFormModal = ({
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {article ? "Editar Artículo" : "Nuevo Artículo"}
-          </DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Número de Artículo"
-              placeholder="Ej. ARTÍCULO 14.2"
-              {...register("article_num")}
-              error={errors.article_num?.message}
-            />
-            <Input
-              label="Título Corto"
-              placeholder="Ej. Faltas Graves"
-              {...register("title")}
-              error={errors.title?.message}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Categoría"
-              placeholder="Ej. Sanciones Disciplinarias"
-              {...register("category")}
-              error={errors.category?.message}
-            />
-            <Select
-              label="Color del Artículo (Badge)"
-              {...register("badge_variant")}
-              error={errors.badge_variant?.message}
-            >
-              <option value="neutral">Neutral (Gris)</option>
-              <option value="primary">Primario (Azul/Tema)</option>
-              <option value="warning">Advertencia (Amarillo)</option>
-              <option value="danger">Peligro (Rojo)</option>
-              <option value="info">Información (Celeste)</option>
-              <option value="success">Éxito (Verde)</option>
-              <option value="outline">Borde solamente</option>
-            </Select>
-          </div>
-
-          <Textarea
-            label="Descripción del Artículo"
-            placeholder="Texto completo de la regla o normativa..."
-            rows={4}
-            {...register("description")}
-            error={errors.description?.message}
-          />
-
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={article ? "Editar Artículo" : "Nuevo Artículo"}
+      maxWidth="2xl"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            label="Sanción"
-            placeholder="Ej. Suspensión de 2 partidos y multa de $5"
-            {...register("sanction")}
-            error={errors.sanction?.message}
+            label="Número de Artículo"
+            placeholder="Ej. ARTÍCULO 14.2"
+            {...register("article_num")}
+            error={errors.article_num?.message}
           />
+          <Input
+            label="Título Corto"
+            placeholder="Ej. Faltas Graves"
+            {...register("title")}
+            error={errors.title?.message}
+          />
+        </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" loading={isLoading}>
-              {article ? "Guardar Cambios" : "Crear Artículo"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Categoría"
+            placeholder="Ej. Sanciones Disciplinarias"
+            {...register("category")}
+            error={errors.category?.message}
+          />
+          <Select
+            label="Color del Artículo (Badge)"
+            {...register("badge_variant")}
+            error={errors.badge_variant?.message}
+          >
+            <option value="neutral">Neutral (Gris)</option>
+            <option value="primary">Primario (Azul/Tema)</option>
+            <option value="warning">Advertencia (Amarillo)</option>
+            <option value="danger">Peligro (Rojo)</option>
+            <option value="info">Información (Celeste)</option>
+            <option value="success">Éxito (Verde)</option>
+            <option value="outline">Borde solamente</option>
+          </Select>
+        </div>
+
+        <Textarea
+          label="Descripción del Artículo"
+          placeholder="Texto completo de la regla o normativa..."
+          rows={4}
+          {...register("description")}
+          error={errors.description?.message}
+        />
+
+        <Input
+          label="Sanción"
+          placeholder="Ej. Suspensión de 2 partidos y multa de $5"
+          {...register("sanction")}
+          error={errors.sanction?.message}
+        />
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            className="px-6"
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" loading={isLoading}>
+            {article ? "Guardar Cambios" : "Crear Artículo"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
