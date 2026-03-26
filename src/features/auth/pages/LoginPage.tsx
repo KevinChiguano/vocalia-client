@@ -16,7 +16,10 @@ const LoginPage = () => {
   const location = useLocation();
   const { login, isAuthenticated } = useAuth();
 
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: "admin@gmail.com",
+    password: "admin123",
+  });
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
