@@ -5,16 +5,21 @@ import { useUIStore } from "@/store/ui.store";
 
 // Mapeo de nombres de rutas
 const routeNameMap: Record<string, string> = {
+  users: "Usuarios",
   administration: "Administración",
   leagues: "Ligas",
   tournaments: "Torneos",
   qualifications: "Calificaciones",
+  credentials: "Carnets",
   login: "Iniciar Sesión",
   teams: "Equipos",
   players: "Jugadores",
   matches: "Partidos",
   "technical-commission": "Comisión Técnica",
   "digital-vocalia": "Vocalia Digital",
+  regulation: "Reglamento",
+  finance: "Finanzas",
+  statistics: "Estadísticas",
   // Add more mappings as needed
 };
 

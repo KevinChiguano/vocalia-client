@@ -387,6 +387,7 @@ export const ScheduleTab = ({ editingMatch, onCancelEdit }: Props) => {
         quality: 1,
         backgroundColor: "#ffffff",
         pixelRatio: 2, // Higher quality
+        fontEmbedCSS: "", // Previene error "font is undefined" en normalizeFontFamily
       });
 
       const pdf = new jsPDF("p", "mm", "a4");

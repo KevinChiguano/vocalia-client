@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Save, Image as ImageIcon } from "lucide-react";
+import { Save } from "lucide-react";
 import { Team, CreateTeamDto } from "../types/team.types";
 import { Category } from "../types/category.types";
 import { Button } from "@/components/ui/Button";
@@ -11,13 +11,14 @@ import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 
 const teamSchema = z.object({
   name: z
     .string()
     .min(3, "El nombre del equipo debe tener al menos 3 caracteres")
     .max(100),
-  logo: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
+  logo: z.string().optional().or(z.literal("")),
   categoryId: z.coerce
     .number()
     .int()
@@ -49,6 +50,7 @@ export const TeamForm = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<TeamFormData>({
     resolver: zodResolver(teamSchema) as any,
@@ -91,25 +93,20 @@ export const TeamForm = ({
         )}
         className="space-y-6"
       >
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Logo Preview */}
-          <div className="flex flex-col items-center gap-3">
-            <label className="ui-label self-start">Logo</label>
-            <div className="w-32 h-32 rounded-2xl bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-              {logoUrl && !errors.logo ? (
-                <img
-                  src={logoUrl}
-                  alt="Preview"
-                  className="w-full h-full object-contain p-2"
-                />
-              ) : (
-                <ImageIcon className="w-10 h-10 opacity-20" />
-              )}
-            </div>
+        <div className="flex flex-col items-center gap-6">
+          {/* Logo Field */}
+          <div className="w-full flex justify-center">
+            <ImageUpload
+              value={logoUrl}
+              onChange={(url) => setValue("logo", url)}
+              folder="teams"
+              label="Logo del Equipo"
+              className="w-fit"
+            />
           </div>
 
-          {/* Basic Info */}
-          <div className="flex-1 space-y-4">
+          <div className="w-full space-y-4">
+            {/* Name Field */}
             <div className="space-y-1.5">
               <Label htmlFor="name" className="ui-label">
                 Nombre del Equipo
@@ -122,22 +119,6 @@ export const TeamForm = ({
               {errors.name?.message && (
                 <p className="text-xs text-danger font-medium">
                   {errors.name.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="logo" className="ui-label">
-                URL del Logo (Opcional)
-              </Label>
-              <Input
-                id="logo"
-                placeholder="https://ejemplo.com/logo.png"
-                {...register("logo")}
-              />
-              {errors.logo?.message && (
-                <p className="text-xs text-danger font-medium">
-                  {errors.logo.message}
                 </p>
               )}
             </div>

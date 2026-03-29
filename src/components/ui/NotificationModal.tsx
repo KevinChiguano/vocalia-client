@@ -12,30 +12,30 @@ export const NotificationModal = () => {
     switch (notification.type) {
       case "success":
         return {
-          bgClass: "bg-green-50 dark:bg-green-900/10",
-          iconBg: "bg-green-100 dark:bg-green-900/30",
-          iconColor: "text-green-600 dark:text-green-400",
+          bgClass: "bg-green-100 dark:bg-green-800/40",
+          iconBg: "bg-green-200 dark:bg-green-700/40",
+          iconColor: "text-green-700 dark:text-green-300",
           titleColor: "text-green-900 dark:text-green-100",
-          borderColor: "border-green-500/20",
+          borderColor: "border border-green-400/40",
           Icon: CheckCircle2,
         };
       case "error":
         return {
-          bgClass: "bg-red-50 dark:bg-red-900/10",
-          iconBg: "bg-red-100 dark:bg-red-900/30",
-          iconColor: "text-red-600 dark:text-red-400",
+          bgClass: "bg-red-100 dark:bg-red-800/40",
+          iconBg: "bg-red-200 dark:bg-red-700/40",
+          iconColor: "text-red-700 dark:text-red-300",
           titleColor: "text-red-900 dark:text-red-100",
-          borderColor: "border-red-500/20",
+          borderColor: "border border-red-400/40",
           Icon: AlertCircle,
         };
       case "info":
       default:
         return {
-          bgClass: "bg-blue-50 dark:bg-blue-900/10",
-          iconBg: "bg-blue-100 dark:bg-blue-900/30",
-          iconColor: "text-blue-600 dark:text-blue-400",
+          bgClass: "bg-blue-100 dark:bg-blue-800/40",
+          iconBg: "bg-blue-200 dark:bg-blue-700/40",
+          iconColor: "text-blue-700 dark:text-blue-300",
           titleColor: "text-blue-900 dark:text-blue-100",
-          borderColor: "border-blue-500/20",
+          borderColor: "border border-blue-400/40",
           Icon: Info,
         };
     }

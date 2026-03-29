@@ -1,5 +1,6 @@
 import { Edit2, Shield, Trash2, ClipboardList, Users } from "lucide-react";
 import { Team } from "../types/team.types";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -20,7 +21,7 @@ export const TeamCard = ({ team, onEdit, onDelete }: Props) => {
         <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-50" />
         {team.logo ? (
           <img
-            src={team.logo}
+            src={getDirectImageUrl(team.logo)}
             alt={team.name}
             className="w-32 h-32 object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
           />

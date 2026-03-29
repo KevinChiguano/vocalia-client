@@ -1,4 +1,5 @@
 import { TeamStats } from "../types/statistics.types";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 
 interface Props {
   data: TeamStats[];
@@ -87,7 +88,7 @@ export const StandingsTable = ({ data, selectedTeamId, onRowClick }: Props) => {
                         <div className="size-8 rounded-full flex shrink-0 items-center justify-center font-bold text-xs text-text uppercase overflow-hidden">
                           {team.team.logo ? (
                             <img
-                              src={team.team.logo}
+                              src={getDirectImageUrl(team.team.logo)}
                               alt={team.team.name}
                               className="w-full h-full object-contain p-0.5"
                             />
@@ -168,7 +169,7 @@ export const StandingsTable = ({ data, selectedTeamId, onRowClick }: Props) => {
                     <div className="size-8 rounded-full flex shrink-0 items-center justify-center font-bold text-xs text-text uppercase overflow-hidden">
                       {team.team.logo ? (
                         <img
-                          src={team.team.logo}
+                          src={getDirectImageUrl(team.team.logo)}
                           alt={team.team.name}
                           className="w-full h-full object-contain p-0.5"
                         />

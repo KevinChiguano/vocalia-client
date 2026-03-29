@@ -31,6 +31,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useUIStore } from "@/store/ui.store";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 
 export const PlayersTab = () => {
   const [searchParams] = useSearchParams();
@@ -256,7 +257,7 @@ export const PlayersTab = () => {
             <span className="w-14 h-14 rounded-xl">
               {activeTeam?.logo ? (
                 <img
-                  src={activeTeam.logo}
+                  src={getDirectImageUrl(activeTeam.logo)}
                   alt="Logo"
                   className="w-full h-full object-contain"
                 />
@@ -355,7 +356,7 @@ export const PlayersTab = () => {
                   <div className="w-10 h-10 rounded-full bg-surface border border-border/50 overflow-hidden shrink-0">
                     {player.imageUrl ? (
                       <img
-                        src={player.imageUrl}
+                        src={getDirectImageUrl(player.imageUrl)}
                         alt={player.name}
                         className="w-full h-full object-cover"
                       />
@@ -417,7 +418,7 @@ export const PlayersTab = () => {
                       <div className="w-12 h-12 rounded-full border border-border/50 overflow-hidden bg-surface shrink-0">
                         {player.imageUrl ? (
                           <img
-                            src={player.imageUrl}
+                            src={getDirectImageUrl(player.imageUrl)}
                             className="w-full h-full object-cover"
                           />
                         ) : (

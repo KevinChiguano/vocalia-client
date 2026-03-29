@@ -87,10 +87,21 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
       return Number(player?.team?.id) === Number(match.awayTeam?.id);
     }).length || 0;
 
-  const handleSaveObservations = () => {
+  const handleSaveActa = () => {
     updateVocalia.mutate({
       matchId,
-      data: { observations },
+      data: {
+        observations,
+        arbitratorName,
+        signatures: {
+          local: localSigRef.current?.getSignature() || vocalia.signatures?.local,
+          away: awaySigRef.current?.getSignature() || vocalia.signatures?.away,
+        },
+        vocaliaData: {
+          localAmount,
+          awayAmount,
+        },
+      },
     });
   };
 
@@ -150,7 +161,7 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
     if (sanction.type === "amarilla") acc[playerId].yellow += 1;
     if (
       sanction.type === "roja_directa" ||
-      sanction.type === "roja_doble_amarilla"
+      sanction.type === "doble_amarilla"
     )
       acc[playerId].red += 1;
     return acc;
@@ -554,16 +565,16 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
               disabled={isFinalized}
             />
             {!isFinalized && (
-              <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
                 <Button
                   size="sm"
-                  variant="secondary"
-                  onClick={handleSaveObservations}
+                  variant="primary"
+                  onClick={handleSaveActa}
                   disabled={updateVocalia.isPending}
-                  className="shadow-md"
+                  className="shadow-lg hover:scale-105 active:scale-95 transition-all"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {updateVocalia.isPending ? "Guardando..." : "Guardar Notas"}
+                  {updateVocalia.isPending ? "Guardando..." : "Guardar Acta Completa"}
                 </Button>
               </div>
             )}
@@ -629,6 +640,7 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
                         local: localSigRef.current?.getSignature() || undefined,
                         away: awaySigRef.current?.getSignature() || undefined,
                       },
+                      observations,
                     },
                     {
                       onSuccess: () => {
@@ -674,6 +686,14 @@ export const MatchSummaryTab = ({ vocalia }: MatchSummaryTabProps) => {
               />
             </>
           )}
+          <Button
+            variant="ghost"
+            className="text-text-muted hover:text-red-500 transition-colors font-bold text-sm border border-border"
+            onClick={() => (window.location.href = "/digital-vocalia")}
+          >
+            <X className="w-4 h-4 mr-2" />
+            SALIR
+          </Button>
         </div>
       </footer>
     </div>

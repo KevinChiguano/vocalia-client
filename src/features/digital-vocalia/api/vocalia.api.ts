@@ -39,6 +39,7 @@ export const vocaliaApi = {
       vocaliaData?: any;
       arbitratorName?: string;
       signatures?: { local?: string; away?: string };
+      observations?: string;
     },
   ): Promise<void> => {
     await api.post(`/vocalias/${matchId}/finalize`, scores);
@@ -72,16 +73,12 @@ export const vocaliaApi = {
   registerMatchPlayers: async (payload: {
     matchId: number;
     teamId: number;
-    playerIds: number[];
-    isStarting?: boolean;
+    players: Array<{ playerId: number; isStarting: boolean }>;
   }): Promise<void> => {
     await api.post("/match-players/bulk", {
       matchId: payload.matchId,
       teamId: payload.teamId,
-      players: payload.playerIds.map((pid) => ({
-        playerId: pid,
-        isStarting: payload.isStarting || false,
-      })),
+      players: payload.players,
     });
   },
 

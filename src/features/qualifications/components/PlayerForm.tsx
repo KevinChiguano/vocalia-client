@@ -8,7 +8,6 @@ import {
   Hash,
   CreditCard,
   Calendar,
-  Image as ImageIcon,
 } from "lucide-react";
 import { Player, CreatePlayerDto } from "../types/player.types";
 import { Team } from "../types/team.types";
@@ -19,6 +18,7 @@ import { Category } from "../types/category.types";
 import { formatDateForInput } from "@/utils/dateUtils";
 import { Modal } from "@/components/ui/Modal";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 
 const playerSchema = z.object({
   dni: z
@@ -40,11 +40,7 @@ const playerSchema = z.object({
     .optional(),
   teamId: z.coerce.number().int().positive("Debes seleccionar un equipo"),
   birthDate: z.string().optional().or(z.literal("")),
-  imageUrl: z
-    .string()
-    .url("Debe ser una URL válida")
-    .optional()
-    .or(z.literal("")),
+  imageUrl: z.string().optional().or(z.literal("")),
   categoryId: z.coerce
     .number()
     .int()
@@ -78,6 +74,7 @@ export const PlayerForm = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<PlayerFormData>({
     resolver: zodResolver(playerSchema) as any,
@@ -134,30 +131,19 @@ export const PlayerForm = ({
         )}
         className="space-y-6 overflow-y-auto max-h-[75vh] custom-scrollbar"
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Photo Preview */}
-          <div className="flex flex-col items-center gap-3">
-            <label className="ui-label self-start">Foto del Jugador</label>
-            <div className="w-32 h-40 rounded-2xl bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden relative group">
-              {imageUrl && !errors.imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <ImageIcon className="w-10 h-10 opacity-20" />
-              )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="text-[10px] text-white font-medium text-center px-2">
-                  Vista Previa
-                </p>
-              </div>
-            </div>
+        <div className="flex flex-col items-center gap-6 mb-8">
+          {/* Photo Field */}
+          <div className="w-full flex justify-center">
+            <ImageUpload
+              value={imageUrl}
+              onChange={(url) => setValue("imageUrl", url)}
+              folder="players"
+              label="Foto del Jugador"
+              className="w-fit"
+            />
           </div>
 
-          {/* Basic Info & Identification Wrapper */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="w-full space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="name" className="ui-label">
@@ -273,28 +259,6 @@ export const PlayerForm = ({
             {errors.birthDate?.message && (
               <p className="text-xs text-danger font-medium">
                 {errors.birthDate.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="imageUrl" className="ui-label">
-              URL de la Imagen
-            </Label>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
-                <ImageIcon className="w-4 h-4" />
-              </div>
-              <Input
-                id="imageUrl"
-                placeholder="https://ejemplo.com/jugador.png"
-                className=""
-                {...register("imageUrl")}
-              />
-            </div>
-            {errors.imageUrl?.message && (
-              <p className="text-xs text-danger font-medium">
-                {errors.imageUrl.message}
               </p>
             )}
           </div>

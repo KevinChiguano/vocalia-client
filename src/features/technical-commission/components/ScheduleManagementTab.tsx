@@ -561,6 +561,7 @@ export const ScheduleManagementTab = ({
         quality: 1,
         backgroundColor: "#ffffff",
         pixelRatio: 2,
+        fontEmbedCSS: "", // Previene error "font is undefined" en normalizeFontFamily
       });
       const pdf = new jsPDF("p", "mm", "a4");
       const imgProps = pdf.getImageProperties(imgData);
@@ -872,7 +873,7 @@ export const ScheduleManagementTab = ({
         </div>
 
         {/* Bulk Actions Tool */}
-        <div className="bg-primary/10 p-6 rounded-xl border border-primary/20 relative overflow-hidden group">
+        {/* <div className="bg-primary/10 p-6 rounded-xl border border-primary/20 relative overflow-hidden group">
           <div className="relative z-10">
             <h3 className="text-primary font-bold mb-2 flex items-center gap-2">
               <Calendar className="w-5 h-5" />
@@ -889,7 +890,7 @@ export const ScheduleManagementTab = ({
             </button>
           </div>
           <Repeat className="absolute -bottom-4 -right-4 w-24 h-24 text-primary/5 group-hover:scale-110 transition-transform" />
-        </div>
+        </div> */}
       </div>
 
       {/* Right Column: Scheduled Matches List */}
@@ -954,7 +955,7 @@ export const ScheduleManagementTab = ({
             <div className="col-span-2">Cancha</div>
             <div className="col-span-2">Categoría</div>
             <div className="col-span-4 justify-self-center">Enfrentamiento</div>
-            <div className="col-span-2">Vocal</div>
+            <div className="col-span-2 justify-self-center">Vocal</div>
             <div className="col-span-1 justify-self-end">Acciones</div>
           </div>
 
@@ -1051,10 +1052,10 @@ export const ScheduleManagementTab = ({
                         </span>
                       </div>
                     </div>
-                    <div className="col-span-2 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary border border-primary/20 overflow-hidden flex items-center justify-center text-xs font-bold uppercase">
+                    <div className="col-span-2 flex items-center justify-center gap-2">
+                      {/* <div className="w-6 h-6 rounded-full bg-primary/10 text-primary border border-primary/20 overflow-hidden flex items-center justify-center text-xs font-bold uppercase">
                         {(match.vocal?.name || "S").charAt(0)}
-                      </div>
+                      </div> */}
                       <span className="text-text-muted text-sm truncate">
                         {match.vocal?.name || "Sin Asignar"}
                       </span>
