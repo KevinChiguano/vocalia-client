@@ -63,12 +63,12 @@ export const Modal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className={cn(
-          "w-full ui-card overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200",
+          "w-full ui-card shadow-2xl animate-in zoom-in-95 duration-200",
           maxWidthClasses[maxWidth],
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-elevated">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-elevated rounded-t-[inherit]">
           <h2 className="type-h3 font-bold text-primary">{title}</h2>
           {!hideCloseButton && (
             <Button
@@ -85,7 +85,7 @@ export const Modal = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-visible">{children}</div>
       </div>
     </div>
   );

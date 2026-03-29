@@ -30,6 +30,8 @@ const FinancePage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState<string | undefined>();
+  const [endDate, setEndDate] = useState<string | undefined>();
   const [tournamentId, setTournamentId] = useState<number | undefined>();
   const [categoryId, setCategoryId] = useState<string | undefined>();
 
@@ -49,6 +51,8 @@ const FinancePage: React.FC = () => {
         page,
         limit,
         search,
+        startDate,
+        endDate,
         tournamentId,
         categoryId,
       });
@@ -63,10 +67,16 @@ const FinancePage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [page, limit, search, tournamentId, categoryId]);
+  }, [page, limit, search, startDate, endDate, tournamentId, categoryId]);
 
-  const handleSearchChange = (val: string) => {
-    setSearch(val);
+  const handleApplyFilters = (filters: {
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    setSearch(filters.search || "");
+    setStartDate(filters.startDate);
+    setEndDate(filters.endDate);
     setPage(1);
   };
 
@@ -92,6 +102,8 @@ const FinancePage: React.FC = () => {
       const fullData = await financeApi.getFinancialsExport({
         tournamentId,
         categoryId,
+        startDate,
+        endDate,
         search,
       });
       return fullData;
@@ -320,7 +332,7 @@ const FinancePage: React.FC = () => {
           quality: 1,
           backgroundColor: "#ffffff",
           pixelRatio: 2,
-          skipFonts: true,
+          fontEmbedCSS: "",
         });
 
         if (!imgData || imgData === "data:,") {
@@ -433,7 +445,9 @@ const FinancePage: React.FC = () => {
 
       <FinanceFilters
         searchValue={search}
-        onSearchChange={handleSearchChange}
+        startDateValue={startDate}
+        endDateValue={endDate}
+        onApplyFilters={handleApplyFilters}
         tournamentId={tournamentId}
         onTournamentChange={(val) => {
           setTournamentId(val);
@@ -481,6 +495,23 @@ const FinancePage: React.FC = () => {
         formatMoney={formatMoney}
         formatDate={formatDate}
       />
+
+      {/* Export Loading Overlay */}
+      {isExporting !== false && (
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-overlay/60 backdrop-blur-sm">
+          <div className="bg-surface p-8 rounded-2xl shadow-2xl border border-border flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="font-bold text-lg">
+              {isExporting === "excel"
+                ? "Generando Excel..."
+                : "Generando PDF..."}
+            </p>
+            <p className="text-sm text-text-muted">
+              Por favor espera un momento
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

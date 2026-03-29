@@ -1,11 +1,17 @@
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 
 interface MatchHeaderProps {
   match: any;
+  localScore?: number;
+  awayScore?: number;
 }
 
-export const MatchHeader = ({ match }: MatchHeaderProps) => {
+export const MatchHeader = ({ match, localScore, awayScore }: MatchHeaderProps) => {
+  const displayLocalScore = localScore !== undefined ? localScore : (match.local_score || 0);
+  const displayAwayScore = awayScore !== undefined ? awayScore : (match.away_score || 0);
+
   return (
     <Card className="bg-muted/50">
       <CardContent className="p-6">
@@ -14,7 +20,7 @@ export const MatchHeader = ({ match }: MatchHeaderProps) => {
           <div className="flex flex-col items-center gap-2 flex-1">
             {match.localTeam?.team_logo ? (
               <img
-                src={match.localTeam.team_logo}
+                src={getDirectImageUrl(match.localTeam.team_logo)}
                 alt={match.localTeam.name}
                 className="w-16 h-16 object-contain"
               />
@@ -31,9 +37,9 @@ export const MatchHeader = ({ match }: MatchHeaderProps) => {
           {/* Score */}
           <div className="flex flex-col items-center gap-2">
             <div className="text-4xl font-black font-mono tracking-wider flex items-center gap-4">
-              <span>{match.local_score}</span>
+              <span>{displayLocalScore}</span>
               <span className="text-muted-foreground">-</span>
-              <span>{match.away_score}</span>
+              <span>{displayAwayScore}</span>
             </div>
             <Badge
               variant={match.status === "en_curso" ? "neutral" : "primary"}
@@ -46,7 +52,7 @@ export const MatchHeader = ({ match }: MatchHeaderProps) => {
           <div className="flex flex-col items-center gap-2 flex-1">
             {match.awayTeam?.team_logo ? (
               <img
-                src={match.awayTeam.team_logo}
+                src={getDirectImageUrl(match.awayTeam.team_logo)}
                 alt={match.awayTeam.name}
                 className="w-16 h-16 object-contain"
               />

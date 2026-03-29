@@ -321,9 +321,9 @@ const DigitalVocaliaPage = () => {
                       variant={isLive ? "primary" : "secondary"}
                     >
                       <span className="material-symbols-outlined">
-                        {isLive ? "edit_note" : "play_circle"}
+                        {isLive ? "edit_note" : "login"}
                       </span>
-                      {isLive ? "REGISTRAR ACCIÓN" : "INICIAR VOCALÍA"}
+                      {isLive ? "REGISTRAR ACCIÓN" : "ABRIR"}
                     </Button>
                   )}
                 </div>

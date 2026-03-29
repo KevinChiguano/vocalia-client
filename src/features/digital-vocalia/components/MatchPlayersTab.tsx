@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 import { useQuery } from "@tanstack/react-query";
 import { playerApi } from "@/features/qualifications/api/player.api";
 import {
-  useMatchPlayers,
   useVocaliasMutations,
   useMatchVocalia,
 } from "../hooks/useVocalias";
@@ -17,32 +16,46 @@ import {
   Shield,
 } from "lucide-react";
 
-import { useUIStore } from "@/store/ui.store";
-
-// Mock del objeto toast
-const toast = {
-  error: (msg: string) =>
-    useUIStore.getState().setNotification("Error", msg, "error"),
-  success: (msg: string) =>
-    useUIStore.getState().setNotification("Éxito", msg, "success"),
-};
-
 interface MatchPlayersTabProps {
   match: any;
+  localPlayersList: number[];
+  setLocalPlayersList: React.Dispatch<React.SetStateAction<number[]>>;
+  localStartersList: number[];
+  setLocalStartersList: React.Dispatch<React.SetStateAction<number[]>>;
+  awayPlayersList: number[];
+  setAwayPlayersList: React.Dispatch<React.SetStateAction<number[]>>;
+  awayStartersList: number[];
+  setAwayStartersList: React.Dispatch<React.SetStateAction<number[]>>;
+  localCaptainState: number | null;
+  setLocalCaptainState: React.Dispatch<React.SetStateAction<number | null>>;
+  awayCaptainState: number | null;
+  setAwayCaptainState: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
-export const MatchPlayersTab = ({ match }: MatchPlayersTabProps) => {
+export const MatchPlayersTab = ({
+  match,
+  localPlayersList,
+  setLocalPlayersList,
+  localStartersList,
+  setLocalStartersList,
+  awayPlayersList,
+  setAwayPlayersList,
+  awayStartersList,
+  setAwayStartersList,
+  localCaptainState,
+  setLocalCaptainState,
+  awayCaptainState,
+  setAwayCaptainState,
+}: MatchPlayersTabProps) => {
   const matchId = Number(match.id || match.match_id);
   const localTeamId = Number(match.localTeam?.id || match.local_team_id);
   const awayTeamId = Number(match.awayTeam?.id || match.away_team_id);
 
-  const { data: matchPlayers, isLoading: isLoadingMatchPlayers } =
-    useMatchPlayers(matchId);
 
   const { data: vocalia, isLoading: isLoadingVocalia } =
     useMatchVocalia(matchId);
 
-  const { registerPlayers, updateVocalia } = useVocaliasMutations(matchId);
+  const { registerPlayers, updateVocalia, deleteMatchPlayers } = useVocaliasMutations(matchId);
 
   // Fetch players for both teams
   const { data: localPlayersData, isLoading: isLoadingLocal } = useQuery({
@@ -57,70 +70,68 @@ export const MatchPlayersTab = ({ match }: MatchPlayersTabProps) => {
     enabled: !!awayTeamId,
   });
 
-  const [selectedLocal, setSelectedLocal] = useState<number[]>([]);
-  const [selectedAway, setSelectedAway] = useState<number[]>([]);
+  const isLocked = match.status !== "programado";
 
   const handleRegisterAll = async () => {
-    if (selectedLocal.length === 0 && selectedAway.length === 0) {
-      toast.error("Selecciona al menos un jugador de algún equipo");
-      return;
-    }
+    if (isLocked) return;
 
-    if (selectedLocal.length > 0) {
-      registerPlayers.mutate({
-        matchId: matchId,
-        teamId: localTeamId,
-        playerIds: selectedLocal,
-        isStarting: true,
-      });
-    }
+    // Clear and Redo Players selection to ensure it matches precisely what is on screen
+    try {
+        // 1. Register local players with starting status
+        if (localPlayersList.length > 0) {
+            await registerPlayers.mutateAsync({
+                matchId,
+                teamId: localTeamId,
+                players: localPlayersList.map(id => ({
+                    playerId: id,
+                    isStarting: localStartersList.includes(id)
+                })),
+            });
+        }
 
-    if (selectedAway.length > 0) {
-      registerPlayers.mutate({
-        matchId: matchId,
-        teamId: awayTeamId,
-        playerIds: selectedAway,
-        isStarting: true,
-      });
+        // 3. Register away players with starting status
+        if (awayPlayersList.length > 0) {
+            await registerPlayers.mutateAsync({
+                matchId,
+                teamId: awayTeamId,
+                players: awayPlayersList.map(id => ({
+                    playerId: id,
+                    isStarting: awayStartersList.includes(id)
+                })),
+            });
+        }
+
+        // 4. Save Captains
+        const currentLocalCap = Number(vocalia?.localCaptainId || vocalia?.local_captain_id);
+        const currentAwayCap = Number(vocalia?.awayCaptainId || vocalia?.away_captain_id);
+
+        if (localCaptainState !== currentLocalCap || awayCaptainState !== currentAwayCap) {
+            await updateVocalia.mutateAsync({
+                matchId,
+                data: {
+                    localCaptainId: localCaptainState,
+                    awayCaptainId: awayCaptainState,
+                },
+            });
+        }
+    } catch (error) {
+        console.error("Error updating roster:", error);
     }
   };
 
   const handleToggleCaptain = (playerId: number, isLocal: boolean) => {
-    const isCaptain =
-      vocalia?.localCaptainId === playerId ||
-      vocalia?.awayCaptainId === playerId ||
-      vocalia?.local_captain_id === playerId ||
-      vocalia?.away_captain_id === playerId;
-
-    if (isCaptain) {
-      // Remove captain
-      updateVocalia.mutate({
-        matchId,
-        data: isLocal ? { localCaptainId: null } : { awayCaptainId: null },
-      });
+    if (isLocked) return;
+    if (isLocal) {
+      setLocalCaptainState((prev) => (prev === playerId ? null : playerId));
     } else {
-      // Set captain
-      updateVocalia.mutate({
-        matchId,
-        data: isLocal
-          ? { localCaptainId: playerId }
-          : { awayCaptainId: playerId },
-      });
+      setAwayCaptainState((prev) => (prev === playerId ? null : playerId));
     }
   };
 
-  const isPlayerRegistered = (playerId: number) => {
-    return (
-      matchPlayers?.some(
-        (mp: any) => Number(mp.player?.id) === Number(playerId),
-      ) ?? false
-    );
-  };
 
   if (
     isLoadingLocal ||
     isLoadingAway ||
-    isLoadingMatchPlayers ||
     isLoadingVocalia
   ) {
     return (
@@ -132,19 +143,6 @@ export const MatchPlayersTab = ({ match }: MatchPlayersTabProps) => {
 
   const localPlayers = localPlayersData?.data || [];
   const awayPlayers = awayPlayersData?.data || [];
-  const localCaptainId = Number(
-    vocalia?.localCaptainId || vocalia?.local_captain_id,
-  );
-  const awayCaptainId = Number(
-    vocalia?.awayCaptainId || vocalia?.away_captain_id,
-  );
-
-  const localActiveCount = localPlayers.filter((p: any) =>
-    isPlayerRegistered(p.id || p.player_id),
-  ).length;
-  const awayActiveCount = awayPlayers.filter((p: any) =>
-    isPlayerRegistered(p.id || p.player_id),
-  ).length;
 
   return (
     <div className="max-w-[1600px] mx-auto p-2 md:p-6 font-sans">
@@ -155,19 +153,23 @@ export const MatchPlayersTab = ({ match }: MatchPlayersTabProps) => {
             Gestión de Plantilla del Partido
           </h2>
           <p className="text-text-muted">
-            Seleccione jugadores activos y designe capitanes de equipo antes del
-            inicio del partido.
+            {isLocked 
+              ? "La planilla está bloqueada. El partido ya ha iniciado o finalizado."
+              : "Seleccione jugadores activos y designe capitanes de equipo antes del inicio del partido."
+            }
           </p>
         </div>
         <Button
           onClick={handleRegisterAll}
           disabled={
+            isLocked ||
             registerPlayers.isPending ||
-            (selectedLocal.length === 0 && selectedAway.length === 0)
+            updateVocalia.isPending ||
+            deleteMatchPlayers.isPending
           }
           className="bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95"
         >
-          {registerPlayers.isPending ? (
+          {registerPlayers.isPending || updateVocalia.isPending || deleteMatchPlayers.isPending ? (
             <Loader2 className="animate-spin w-5 h-5" />
           ) : (
             <Save className="w-5 h-5" />
@@ -183,17 +185,29 @@ export const MatchPlayersTab = ({ match }: MatchPlayersTabProps) => {
           teamName={match.localTeam?.name}
           teamLogo={match.localTeam?.team_logo}
           role="LOCAL"
-          activeCount={localActiveCount}
+          activeCount={localPlayersList.length}
+          starterCount={localStartersList.length}
           totalCount={localPlayers.length}
           players={localPlayers}
-          selectedIds={selectedLocal}
-          captainId={localCaptainId}
+          selectedIds={localPlayersList}
+          starterIds={localStartersList}
+          captainId={Number(localCaptainState)}
           onSelect={(id, checked) => {
-            if (checked) setSelectedLocal((prev) => [...prev, id]);
-            else setSelectedLocal((prev) => prev.filter((pId) => pId !== id));
+            if (isLocked) return;
+            if (checked) setLocalPlayersList((prev) => [...prev, id]);
+            else {
+                setLocalPlayersList((prev) => prev.filter((pId) => pId !== id));
+                setLocalStartersList((prev) => prev.filter((pId) => pId !== id));
+            }
+          }}
+          onToggleStarter={(id) => {
+            if (isLocked) return;
+            setLocalStartersList((prev) => 
+                prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
+            );
           }}
           onToggleCaptain={(id) => handleToggleCaptain(id, true)}
-          isPlayerRegistered={isPlayerRegistered}
+          isLocked={isLocked}
           isCaptainLoading={updateVocalia.isPending}
         />
 
@@ -202,17 +216,29 @@ export const MatchPlayersTab = ({ match }: MatchPlayersTabProps) => {
           teamName={match.awayTeam?.name}
           teamLogo={match.awayTeam?.team_logo}
           role="VISITANTE"
-          activeCount={awayActiveCount}
+          activeCount={awayPlayersList.length}
+          starterCount={awayStartersList.length}
           totalCount={awayPlayers.length}
           players={awayPlayers}
-          selectedIds={selectedAway}
-          captainId={awayCaptainId}
+          selectedIds={awayPlayersList}
+          starterIds={awayStartersList}
+          captainId={Number(awayCaptainState)}
           onSelect={(id, checked) => {
-            if (checked) setSelectedAway((prev) => [...prev, id]);
-            else setSelectedAway((prev) => prev.filter((pId) => pId !== id));
+            if (isLocked) return;
+            if (checked) setAwayPlayersList((prev) => [...prev, id]);
+            else {
+                setAwayPlayersList((prev) => prev.filter((pId) => pId !== id));
+                setAwayStartersList((prev) => prev.filter((pId) => pId !== id));
+            }
+          }}
+          onToggleStarter={(id) => {
+            if (isLocked) return;
+            setAwayStartersList((prev) => 
+                prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
+            );
           }}
           onToggleCaptain={(id) => handleToggleCaptain(id, false)}
-          isPlayerRegistered={isPlayerRegistered}
+          isLocked={isLocked}
           isCaptainLoading={updateVocalia.isPending}
         />
       </div>
@@ -256,13 +282,16 @@ interface RosterCardProps {
   teamLogo?: string;
   role: "LOCAL" | "VISITANTE";
   activeCount: number;
+  starterCount: number;
   totalCount: number;
   players: any[];
   selectedIds: number[];
+  starterIds: number[];
   captainId: number;
   onSelect: (id: number, checked: boolean) => void;
+  onToggleStarter: (id: number) => void;
   onToggleCaptain: (id: number) => void;
-  isPlayerRegistered: (id: number) => boolean;
+  isLocked: boolean;
   isCaptainLoading: boolean;
 }
 
@@ -271,13 +300,16 @@ const RosterCard = ({
   teamLogo,
   role,
   activeCount,
+  starterCount,
   totalCount,
   players,
   selectedIds,
+  starterIds,
   captainId,
   onSelect,
+  onToggleStarter,
   onToggleCaptain,
-  isPlayerRegistered,
+  isLocked,
   isCaptainLoading,
 }: RosterCardProps) => {
   return (
@@ -287,7 +319,7 @@ const RosterCard = ({
           <div className="w-12 h-12  rounded-lg flex items-center justify-center border border-border">
             {teamLogo ? (
               <img
-                src={teamLogo}
+                src={getDirectImageUrl(teamLogo)}
                 alt={teamName}
                 className="w-8 h-8 object-contain"
               />
@@ -304,10 +336,14 @@ const RosterCard = ({
             </span>
           </div>
         </div>
-        <div className="flex gap-2">
-          <span className="px-3 py-1 bg-surface border border-border text-text-subtle text-xs font-bold rounded-full shadow-sm">
+        <div className="flex flex-col items-end gap-1">
+          <span className="px-3 py-1 bg-surface border border-border text-text-subtle text-[10px] font-bold rounded-full shadow-sm">
             {role}
           </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-success capitalize">{starterCount} Titulares</span>
+            <span className="text-[10px] font-bold text-primary capitalize">{activeCount - starterCount} Suplentes</span>
+          </div>
         </div>
       </div>
 
@@ -318,16 +354,17 @@ const RosterCard = ({
               <th className="py-3.5 px-6 w-16 text-center bg-primary/5">Sel</th>
               <th className="py-3.5 px-4 w-16 text-center bg-primary/5">#</th>
               <th className="py-3.5 px-4 bg-primary/5">Jugador</th>
-              <th className="py-3.5 px-4 text-center bg-primary/5">Capitán</th>
+              <th className="py-3.5 px-4 text-center bg-primary/5 w-20">Titular</th>
+              <th className="py-3.5 px-4 text-center bg-primary/5 w-20">Capitán</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border text-sm">
             {players.map((player) => {
               const playerId = Number(player.id || player.player_id);
-              const isRegistered = isPlayerRegistered(playerId);
               const isSelected = selectedIds.includes(playerId);
+              const isStarter = starterIds.includes(playerId);
               const isCaptain = captainId === playerId;
-              const isRowActive = isRegistered || isSelected;
+              const isRowActive = isSelected;
 
               return (
                 <tr
@@ -335,18 +372,20 @@ const RosterCard = ({
                   className={`transition-colors group ${
                     isCaptain
                       ? "bg-primary/5 hover:bg-primary/10 border-l-4 border-l-primary"
-                      : "hover:bg-primary/5"
+                      : isStarter && isRowActive 
+                        ? "bg-success/5 hover:bg-success/10" 
+                        : "hover:bg-primary/5"
                   } ${!isRowActive && !isCaptain ? "opacity-60 hover:opacity-100" : ""}`}
                 >
                   <td className="py-3 px-6 text-center">
                     <div className="flex items-center justify-center">
                       <Checkbox
-                        checked={isSelected || isRegistered}
-                        disabled={isRegistered}
+                        checked={isSelected}
+                        disabled={isLocked}
                         onCheckedChange={(checked) =>
                           onSelect(playerId, checked as boolean)
                         }
-                        className={isRegistered ? "opacity-50" : ""}
+                        className={isLocked ? "opacity-50" : ""}
                       />
                     </div>
                   </td>
@@ -379,13 +418,34 @@ const RosterCard = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onToggleCaptain(playerId)}
-                      disabled={isCaptainLoading}
-                      className={`hover:bg-transparent transition-transform active:scale-95 ${
-                        isCaptain
-                          ? "text-primary scale-125"
-                          : "text-gray-300 dark:text-zinc-600 hover:text-primary"
+                      onClick={() => {
+                        if (!isSelected) onSelect(playerId, true);
+                        onToggleStarter(playerId);
+                      }}
+                      disabled={isLocked}
+                      className={`hover:bg-transparent transition-all active:scale-125 ${
+                        isStarter
+                          ? "scale-110 text-success"
+                          : "text-gray-300 dark:text-zinc-600 grayscale opacity-40"
                       }`}
+                    >
+                      <Shield
+                        className={`w-5 h-5 ${isStarter ? "fill-current" : ""}`}
+                      />
+                    </Button>
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onToggleCaptain(playerId)}
+                      disabled={isCaptainLoading || isLocked}
+                      className={`hover:bg-transparent transition-transform active:scale-125 ${
+                        isCaptain
+                          ? "scale-125"
+                          : "text-gray-300 dark:text-zinc-600"
+                      }`}
+                      style={{ color: isCaptain ? "#FFB800" : undefined }}
                     >
                       <Star
                         className={`w-5 h-5 ${isCaptain ? "fill-current" : ""}`}

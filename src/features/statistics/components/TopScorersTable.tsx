@@ -1,6 +1,7 @@
 import { BaseTable } from "@/components/ui/Table";
 import { TopScorerStats } from "../types/statistics.types";
 import { Trophy } from "lucide-react";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 
 interface Props {
   data: TopScorerStats[];
@@ -47,7 +48,7 @@ const PodiumItem = ({
           <div className="w-full h-full bg-primary/10 rounded-full flex items-center justify-center overflow-hidden">
             {scorer.player.image ? (
               <img
-                src={scorer.player.image}
+                src={getDirectImageUrl(scorer.player.image)}
                 alt={scorer.player.name}
                 className="w-full h-full object-cover"
               />
@@ -128,7 +129,7 @@ export const TopScorersTable = ({ data }: Props) => {
           <div className="flex items-center gap-3" key={`col-player-${index}`}>
             {scorer.player.image ? (
               <img
-                src={scorer.player.image}
+                src={getDirectImageUrl(scorer.player.image)}
                 alt={scorer.player.name}
                 className="w-8 h-8 rounded-full object-cover bg-surface border border-border"
               />
@@ -145,7 +146,7 @@ export const TopScorersTable = ({ data }: Props) => {
           >
             {scorer.team.logo && (
               <img
-                src={scorer.team.logo}
+                src={getDirectImageUrl(scorer.team.logo)}
                 className="w-5 h-5 object-contain"
                 alt={scorer.team.name}
               />
@@ -167,7 +168,7 @@ export const TopScorersTable = ({ data }: Props) => {
             <div className="flex items-center gap-3">
               {scorer.player.image ? (
                 <img
-                  src={scorer.player.image}
+                  src={getDirectImageUrl(scorer.player.image)}
                   alt={scorer.player.name}
                   className="w-10 h-10 rounded-full object-cover bg-surface border border-border shrink-0"
                 />
@@ -183,7 +184,7 @@ export const TopScorersTable = ({ data }: Props) => {
                 <div className="flex items-center gap-1.5 mt-0.5 text-text-muted">
                   {scorer.team.logo && (
                     <img
-                      src={scorer.team.logo}
+                      src={getDirectImageUrl(scorer.team.logo)}
                       className="w-3.5 h-3.5 object-contain"
                       alt={scorer.team.name}
                     />

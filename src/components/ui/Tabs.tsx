@@ -57,10 +57,12 @@ export const TabsTrigger = ({
   value,
   children,
   className,
+  disabled,
 }: {
   value: string;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }) => {
   const context = useContext(TabsContext);
   if (!context) throw new Error("TabsTrigger must be used within Tabs");
@@ -69,8 +71,9 @@ export const TabsTrigger = ({
 
   return (
     <button
+      disabled={disabled}
       className={cn(
-        "relative flex items-center justify-center whitespace-nowrap pb-3 text-sm font-semibold focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+        "relative flex items-center justify-center whitespace-nowrap pb-3 text-sm font-semibold focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40",
         isActive ? "text-primary" : "text-text-muted hover:text-text",
         className,
       )}

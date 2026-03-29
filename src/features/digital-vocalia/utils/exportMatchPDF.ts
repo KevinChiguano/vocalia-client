@@ -27,7 +27,11 @@ export const exportMatchPDF = async (matchId: number | string) => {
 
     try {
       // Create image from DOM element
-      const imgData = await toPng(element, { quality: 0.95, pixelRatio: 2 });
+      const imgData = await toPng(element, {
+        quality: 0.95,
+        pixelRatio: 2,
+        fontEmbedCSS: "",
+      });
       const imgProps = pdf.getImageProperties(imgData);
       const imgHeight = (imgProps.height * contentWidth) / imgProps.width;
 

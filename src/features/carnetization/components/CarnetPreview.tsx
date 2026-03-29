@@ -1,6 +1,7 @@
 import { Camera, QrCode, Shield, FileImage } from "lucide-react";
 import { Player } from "../../qualifications/types/player.types";
 import { useEffect, useState } from "react";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 
 const Base64Image = ({ src, alt, className, style }: any) => {
   const [base64, setBase64] = useState<string | null>(null);
@@ -121,10 +122,10 @@ export const CarnetPreview = ({
 
   const teamLogo = logoUrl || (player.team?.logo as string);
 
-  const safeImageUrl = player.imageUrl;
-  const safeTeamLogo = teamLogo;
-  const safeLeagueLogo = leagueLogoUrl;
-  const safeSignature = signatureUrl;
+  const safeImageUrl = getDirectImageUrl(player.imageUrl);
+  const safeTeamLogo = getDirectImageUrl(teamLogo);
+  const safeLeagueLogo = getDirectImageUrl(leagueLogoUrl);
+  const safeSignature = getDirectImageUrl(signatureUrl);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 print:gap-0 print:block group relative items-center justify-center">

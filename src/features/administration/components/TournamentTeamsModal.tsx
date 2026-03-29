@@ -8,6 +8,7 @@ import { teamApi } from "@/features/qualifications/api/team.api";
 import { Team } from "@/features/qualifications/types/team.types";
 import { useUIStore } from "@/store/ui.store";
 import { tournamentTeamApi as ttApi } from "../api/tournamentTeam.api";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 
 interface Props {
   isOpen: boolean;
@@ -130,7 +131,7 @@ export const TournamentTeamsModal = ({
                       <div className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center text-primary font-bold overflow-hidden">
                         {team.logo ? (
                           <img
-                            src={team.logo}
+                            src={getDirectImageUrl(team.logo)}
                             alt={team.name}
                             className="w-full h-full object-cover"
                           />
@@ -172,7 +173,7 @@ export const TournamentTeamsModal = ({
                   <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center text-primary font-bold overflow-hidden border border-primary/10">
                     {rt.team?.logo ? (
                       <img
-                        src={rt.team.logo}
+                        src={getDirectImageUrl(rt.team.logo)}
                         alt={rt.team.name}
                         className="w-full h-full object-cover"
                       />

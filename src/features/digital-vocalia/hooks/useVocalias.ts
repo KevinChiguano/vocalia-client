@@ -114,7 +114,11 @@ export const useVocaliasMutations = (matchId?: number) => {
   const queryClient = useQueryClient();
 
   const registerPlayers = useMutation({
-    mutationFn: vocaliaApi.registerMatchPlayers,
+    mutationFn: (variables: {
+      matchId: number;
+      teamId: number;
+      players: Array<{ playerId: number; isStarting: boolean }>;
+    }) => vocaliaApi.registerMatchPlayers(variables),
     onSuccess: () => {
       toast.success("Jugadores registrados");
       if (matchId)
@@ -126,7 +130,6 @@ export const useVocaliasMutations = (matchId?: number) => {
   const addGoal = useMutation({
     mutationFn: vocaliaApi.addGoal,
     onSuccess: () => {
-      toast.success("Gol registrado");
       if (matchId) {
         queryClient.invalidateQueries({ queryKey: ["match-goals", matchId] });
         queryClient.invalidateQueries({ queryKey: ["vocalia", matchId] }); // For score update if included
@@ -138,7 +141,6 @@ export const useVocaliasMutations = (matchId?: number) => {
   const deleteGoal = useMutation({
     mutationFn: vocaliaApi.deleteGoal,
     onSuccess: () => {
-      toast.success("Gol eliminado");
       if (matchId) {
         queryClient.invalidateQueries({ queryKey: ["match-goals", matchId] });
         queryClient.invalidateQueries({ queryKey: ["vocalia", matchId] });
@@ -149,7 +151,6 @@ export const useVocaliasMutations = (matchId?: number) => {
   const addSanction = useMutation({
     mutationFn: vocaliaApi.addSanction,
     onSuccess: () => {
-      toast.success("Sanción registrada");
       if (matchId)
         queryClient.invalidateQueries({
           queryKey: ["match-sanctions", matchId],
@@ -161,7 +162,6 @@ export const useVocaliasMutations = (matchId?: number) => {
   const deleteSanction = useMutation({
     mutationFn: vocaliaApi.deleteSanction,
     onSuccess: () => {
-      toast.success("Sanción eliminada");
       if (matchId)
         queryClient.invalidateQueries({
           queryKey: ["match-sanctions", matchId],
@@ -172,7 +172,6 @@ export const useVocaliasMutations = (matchId?: number) => {
   const addSubstitution = useMutation({
     mutationFn: vocaliaApi.addSubstitution,
     onSuccess: () => {
-      toast.success("Cambio registrado");
       if (matchId)
         queryClient.invalidateQueries({
           queryKey: ["match-substitutions", matchId],
@@ -184,7 +183,6 @@ export const useVocaliasMutations = (matchId?: number) => {
   const deleteSubstitution = useMutation({
     mutationFn: vocaliaApi.deleteSubstitution,
     onSuccess: () => {
-      toast.success("Cambio eliminado");
       if (matchId)
         queryClient.invalidateQueries({
           queryKey: ["match-substitutions", matchId],
@@ -200,6 +198,7 @@ export const useVocaliasMutations = (matchId?: number) => {
       vocaliaData?: any;
       arbitratorName?: string;
       signatures?: { local?: string; away?: string };
+      observations?: string;
     }) =>
       vocaliaApi.finalizeMatch(variables.matchId, {
         localScore: variables.localScore,
@@ -207,6 +206,7 @@ export const useVocaliasMutations = (matchId?: number) => {
         vocaliaData: variables.vocaliaData,
         arbitratorName: variables.arbitratorName,
         signatures: variables.signatures,
+        observations: variables.observations,
       }),
     onSuccess: () => {
       toast.success("Partido finalizado");
@@ -255,6 +255,14 @@ export const useVocaliasMutations = (matchId?: number) => {
           queryClient.invalidateQueries({ queryKey: ["vocalia", matchId] });
       },
       onError: () => toast.error("Error al revertir partido"),
+    }),
+    deleteMatchPlayers: useMutation({
+      mutationFn: (matchId: number) => vocaliaApi.deleteMatchPlayers(matchId),
+      onSuccess: () => {
+        if (matchId)
+          queryClient.invalidateQueries({ queryKey: ["match-players", matchId] });
+      },
+      onError: () => toast.error("Error al limpiar planilla"),
     }),
   };
 };

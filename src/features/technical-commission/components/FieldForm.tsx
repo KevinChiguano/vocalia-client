@@ -109,7 +109,6 @@ export const FieldForm = ({
                 <Input
                   id="location"
                   placeholder="Ej: Av. 123 y Calle 4"
-                  className="pl-9"
                   {...register("location")}
                 />
               </div>

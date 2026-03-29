@@ -1,14 +1,8 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 import { useState } from "react";
-import { Lock } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 import { vocaliaApi } from "../api/vocalia.api";
 import { useMutation } from "@tanstack/react-query";
 
@@ -26,6 +20,7 @@ export const SecurityModal = ({
   onCancel,
 }: SecurityModalProps) => {
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const verifyMutation = useMutation({
@@ -47,49 +42,74 @@ export const SecurityModal = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => !val && onCancel && onCancel()}>
-      <DialogContent className="sm:max-w-md" hideCloseButton>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-primary" />
-            Verificación de Seguridad
-          </DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
+    <Modal
+      isOpen={open}
+      onClose={onCancel || (() => {})}
+      title="Verificación de Seguridad"
+      maxWidth="md"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <Lock className="w-6 h-6" />
+            </div>
+            <p className="text-sm text-text-muted leading-relaxed">
               Para ingresar a la gestión de este partido, por favor ingrese su
               contraseña o la contraseña del vocal asignado.
             </p>
+          </div>
+
+          <div className="relative">
             <Input
-              type="password"
-              placeholder="Contraseña..."
+              type={showPassword ? "text" : "password"}
+              placeholder="Ingrese su contraseña"
+              className="pr-12 h-12 bg-elevated/40 border-border focus:ring-primary/20"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoFocus
             />
-            {error && (
-              <p className="text-sm text-red-500 font-medium">{error}</p>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-0 top-0 bottom-0 px-3 text-text-muted hover:text-primary transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
           </div>
 
-          <DialogFooter className="sm:justify-between">
-            {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Regresar
-              </Button>
-            )}
+          {error && (
+            <div className="bg-danger/10 text-danger text-xs font-semibold p-3 rounded-lg border border-danger/20 animate-in fade-in slide-in-from-top-1 duration-200">
+              {error}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-border/40 sm:justify-end">
+          {onCancel && (
             <Button
-              type="submit"
-              disabled={verifyMutation.isPending || !password}
+              type="button"
+              variant="secondary"
+              onClick={onCancel}
               className="w-full sm:w-auto"
             >
-              {verifyMutation.isPending ? "Verificando..." : "Ingresar"}
+              Regresar
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          )}
+          <Button
+            type="submit"
+            disabled={verifyMutation.isPending || !password}
+            className="w-full sm:w-auto min-w-[120px] shadow-lg shadow-primary/20"
+          >
+            {verifyMutation.isPending ? "Verificando..." : "Ingresar"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };

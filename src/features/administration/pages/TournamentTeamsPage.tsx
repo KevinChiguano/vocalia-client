@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   UserSquare2,
 } from "lucide-react";
+import { getDirectImageUrl } from "@/utils/imageUtils";
 import { tournamentApi } from "../api/tournament.api";
 import { tournamentTeamApi as ttApi } from "../api/tournamentTeam.api";
 import { teamApi } from "@/features/qualifications/api/team.api";
@@ -30,7 +31,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 
 const getImageUrl = (path?: string) => {
   if (!path) return "";
-  if (path.startsWith("http")) return path;
+  const directUrl = getDirectImageUrl(path);
+  if (directUrl.startsWith("http")) return directUrl;
   // If it's a relative path, prepend backend URL (removing /api from the end)
   const baseUrl = import.meta.env.VITE_API_URL.replace("/api", "");
   return `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
