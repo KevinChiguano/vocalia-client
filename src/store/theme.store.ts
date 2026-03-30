@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { applyTheme } from "@/theme/initTheme";
 
 export type Theme = "light" | "dark";
 
@@ -8,31 +9,22 @@ interface ThemeState {
   setTheme: (theme: Theme) => void;
 }
 
-const applyTheme = (theme: Theme) => {
-  document.documentElement.classList.toggle("dark", theme === "dark");
-  localStorage.setItem("theme", theme);
-};
-
-export const useThemeStore = create<ThemeState>((set) => {
+export const useThemeStore = create<ThemeState>((set, get) => {
   const savedTheme = (localStorage.getItem("theme") as Theme) || "light";
-
-  // 🔥 aplicar tema al iniciar
-  applyTheme(savedTheme);
 
   return {
     theme: savedTheme,
 
-    toggleTheme: () =>
-      set((state) => {
-        const next = state.theme === "light" ? "dark" : "light";
-        applyTheme(next);
-        return { theme: next };
-      }),
+    toggleTheme: () => {
+      const { theme } = get();
+      const next = theme === "light" ? "dark" : "light";
+      applyTheme(next);
+      set({ theme: next });
+    },
 
-    setTheme: (theme) =>
-      set(() => {
-        applyTheme(theme);
-        return { theme };
-      }),
+    setTheme: (theme) => {
+      applyTheme(theme);
+      set({ theme });
+    },
   };
 });

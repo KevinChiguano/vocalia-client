@@ -328,4 +328,9 @@
       var(--gold-800)
     );
   }
+
+  .no-transition * {
+    transition: none !important;
+    animation: none !important;
+  }
 }
