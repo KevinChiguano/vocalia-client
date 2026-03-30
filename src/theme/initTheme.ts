@@ -1,6 +1,7 @@
 export const applyTheme = (theme: "light" | "dark") => {
   const root = document.documentElement;
 
+  // Bloquea transiciones para evitar parpadeo
   root.classList.add("no-transition");
 
   if (theme === "dark") {
@@ -9,12 +10,18 @@ export const applyTheme = (theme: "light" | "dark") => {
     root.classList.remove("dark");
   }
 
-  // Fuerza reflow y elimina bloqueo
+  // Guardar en localStorage
+  localStorage.setItem("theme", theme);
+
+  // Fuerza un reflow para que el navegador aplique el cambio sin transición
+  // y luego removemos el bloqueo en el siguiente frame
+  window.getComputedStyle(root).opacity; // force reflow
+
   requestAnimationFrame(() => {
     root.classList.remove("no-transition");
   });
 };
 
-// inicial
-const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-applyTheme(savedTheme ?? "light");
+// Inicialización inmediata (si no se hizo en el head)
+const savedTheme = (localStorage.getItem("theme") as "light" | "dark") || "light";
+applyTheme(savedTheme);
